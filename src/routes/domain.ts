@@ -8,7 +8,7 @@ const router = express.Router();
 // Rota para criar um novo domínio
 router.post(
   "/",
-  // Rota protegida por autenticação
+  authMiddleware, // Rota protegida por autenticação
   [
     body("domain_name")
       .notEmpty()
@@ -23,14 +23,14 @@ router.post(
 // Rota para obter todos os domínios
 router.get(
   "/",
-  // Rota protegida por autenticação
+  authMiddleware, // Rota protegida por autenticação
   DomainController.getAll
 );
 
 // Rota para obter um domínio específico por ID
 router.get(
   "/:id",
-  // Rota protegida por autenticação
+  authMiddleware, // Rota protegida por autenticação
   [param("id").notEmpty().withMessage("ID é obrigatório")],
   DomainController.getById
 );
@@ -38,7 +38,7 @@ router.get(
 // Rota para atualizar um domínio específico por ID
 router.put(
   "/:id",
-  // Rota protegida por autenticação
+  authMiddleware, // Rota protegida por autenticação
   [
     param("id").notEmpty().withMessage("ID é obrigatório"),
     body("domain_name").optional().isURL().withMessage("URL inválida"),
@@ -50,7 +50,7 @@ router.put(
 // Rota para deletar um domínio específico por ID
 router.delete(
   "/:id",
-  // Rota protegida por autenticação
+  authMiddleware, // Rota protegida por autenticação
   [param("id").notEmpty().withMessage("ID é obrigatório")],
   DomainController.delete
 );
