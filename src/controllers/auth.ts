@@ -2,14 +2,8 @@ import { Request, Response } from "express";
 import UserService from "../services/user";
 import Logger from "../utils/logger";
 import jwt from "jsonwebtoken";
+import RefreshTokenModel from "../models/refreshtoken"; // Importe o modelo de refresh tokens
 import { v4 as uuidv4 } from "uuid";
-
-// Store for refresh tokens and password reset tokens (in production, use Redis/DB)
-const tokenStore = new Map<string, { userId: string; expiresAt: number }>();
-const passwordResetTokens = new Map<
-  string,
-  { email: string; expiresAt: number }
->();
 
 class AuthController {
   async register(req: Request, res: Response): Promise<Response | any> {
@@ -85,17 +79,18 @@ class AuthController {
       // Log para verificar o token recebido
       Logger.info("Refresh token recebido:", refreshToken);
 
-      const storedToken = tokenStore.get(refreshToken);
+      // Busca o refreshToken no banco de dados
+      const storedToken = await RefreshTokenModel.getByToken(refreshToken);
 
       // Log para verificar se o token está armazenado
-      Logger.info("Token encontrado no tokenStore:", storedToken);
+      Logger.info("Token encontrado no banco de dados:", storedToken);
 
       if (!storedToken) {
         return res.status(401).json({ error: "Invalid refresh token" });
       }
 
       if (Date.now() > storedToken.expiresAt) {
-        tokenStore.delete(refreshToken);
+        await RefreshTokenModel.delete(refreshToken); // Remove o token expirado do banco de dados
         return res.status(401).json({ error: "Refresh token expired" });
       }
 
@@ -110,8 +105,10 @@ class AuthController {
         { expiresIn: "1h" }
       );
 
-      const newRefreshToken = UserService.generateRefreshToken(user.id!);
-      tokenStore.delete(refreshToken); // Invalidate old refresh token
+      // Gera um novo refresh token e armazena no banco de dados
+      const newRefreshToken = await UserService.generateRefreshToken(user.id!);
+
+      await RefreshTokenModel.delete(refreshToken); // Invalida o antigo refresh token
 
       return res.status(200).json({
         token: newAccessToken,
@@ -216,12 +213,8 @@ class AuthController {
         id: string;
       };
 
-      // Remove all refresh tokens for this user
-      for (const [key, value] of tokenStore.entries()) {
-        if (value.userId === decoded.id) {
-          tokenStore.delete(key);
-        }
-      }
+      // Remove todos os refresh tokens para este usuário no banco de dados
+      await RefreshTokenModel.deleteByUserId(decoded.id);
 
       return res.status(200).json({ message: "Successfully logged out" });
     } catch (error) {
@@ -230,4 +223,5 @@ class AuthController {
     }
   }
 }
+
 export default new AuthController();

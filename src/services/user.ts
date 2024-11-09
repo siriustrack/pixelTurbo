@@ -3,6 +3,7 @@ import UserModel from "../models/user";
 import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
+import RefreshTokenModel from "../models/refreshtoken";
 import crypto from "crypto";
 import Logger from "../utils/logger";
 
@@ -68,27 +69,22 @@ class UserService {
       expiresIn: "7d",
     });
 
-    const refreshToken = this.generateRefreshToken(user.id);
+    if (!user.id) {
+      throw new Error("ID do usuário não encontrado");
+    }
+
+    // Use `await` para aguardar a resolução do refreshToken
+    const refreshToken = await this.generateRefreshToken(user.id);
 
     return { token, refreshToken };
   }
 
-  public generateRefreshToken(userId: string | undefined): string {
-    if (!userId) {
-      throw new Error("ID do usuário não fornecido");
-    }
+  public async generateRefreshToken(userId: string): Promise<string> {
     const refreshToken = uuidv4();
-    tokenStore.set(refreshToken, {
-      userId,
-      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
-    });
+    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // Expira em 7 dias
 
-    // Adicione este log para verificar o armazenamento do token
-    Logger.info("Token armazenado no tokenStore:", {
-      refreshToken,
-      userId,
-      expiresAt: tokenStore.get(refreshToken)?.expiresAt,
-    });
+    // Armazena o refreshToken no banco de dados
+    await RefreshTokenModel.create(userId, refreshToken, expiresAt);
 
     return refreshToken;
   }
