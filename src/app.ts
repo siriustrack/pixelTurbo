@@ -42,10 +42,21 @@ app.use(
   })
 );
 
-// Serve swagger.json with proper caching and content type
-app.get("/api-docs/swagger.json", (_req: any, res: any) => {
+// Middleware para remover o ETag
+function removeETagHeader(_req: any, res: any, next: any) {
+  res.removeHeader("ETag");
+  next();
+}
+
+// Rota Swagger JSON sem ETag
+app.get("/api-docs/swagger.json", removeETagHeader, (_req: any, res: any) => {
   res.setHeader("Content-Type", "application/json");
-  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   res.status(200).json(specs);
 });
 
