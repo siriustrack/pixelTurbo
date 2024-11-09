@@ -131,8 +131,11 @@ class EventModel {
 
   // Ajuste no método update para aceitar atualizações parciais
   async update(id: string, event: Partial<Event>): Promise<Event | null> {
-    const fields = Object.keys(event).filter((key) => event[key] !== undefined);
-    const values = fields.map((field) => event[field]);
+    const fields = Object.keys(event).filter(
+      (key): key is keyof Event =>
+        key in event && event[key as keyof Event] !== undefined
+    );
+    const values = fields.map((field) => event[field as keyof Event]);
 
     const setClause = fields
       .map((field, index) => `${field} = $${index + 1}`)

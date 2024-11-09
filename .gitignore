@@ -43,8 +43,9 @@ Thumbs.db
 *.tsbuildinfo
 
 # Arquivos .env (variáveis de ambiente) - DESCOMENTE SE FOR COMMITAR AS VARIAVEIS DE AMBIENTE NO GIT
-#.env
-
+.env
+createdb.js
+getschema.js
 # Arquivos de cache do Docker
 **/.cache
 
