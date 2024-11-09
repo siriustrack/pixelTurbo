@@ -4,6 +4,7 @@ import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
+import Logger from "../utils/logger";
 
 const tokenStore = new Map<string, { userId: string; expiresAt: number }>();
 
@@ -81,6 +82,14 @@ class UserService {
       userId,
       expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
     });
+
+    // Adicione este log para verificar o armazenamento do token
+    Logger.info("Token armazenado no tokenStore:", {
+      refreshToken,
+      userId,
+      expiresAt: tokenStore.get(refreshToken)?.expiresAt,
+    });
+
     return refreshToken;
   }
 

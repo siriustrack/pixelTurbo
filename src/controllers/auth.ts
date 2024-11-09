@@ -81,7 +81,14 @@ class AuthController {
   async refreshToken(req: Request, res: Response): Promise<Response | any> {
     try {
       const { refreshToken } = req.body;
+
+      // Log para verificar o token recebido
+      Logger.info("Refresh token recebido:", refreshToken);
+
       const storedToken = tokenStore.get(refreshToken);
+
+      // Log para verificar se o token está armazenado
+      Logger.info("Token encontrado no tokenStore:", storedToken);
 
       if (!storedToken) {
         return res.status(401).json({ error: "Invalid refresh token" });
