@@ -1,10 +1,7 @@
-import { Pool, QueryResult } from "pg";
+import { QueryResult } from "pg";
+import { pool } from "../utils/pgdb";
 import { Lead } from "../types";
 import { v4 as uuidv4 } from "uuid";
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
 class LeadModel {
   async create(lead: Lead): Promise<Lead> {

@@ -1,10 +1,7 @@
-import { Pool, QueryResult } from "pg";
+import { QueryResult } from "pg";
+import { pool } from "../utils/pgdb";
 import { User } from "../types";
 import { v4 as uuidv4 } from "uuid";
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
 class UserModel {
   async create(user: User): Promise<User> {
