@@ -101,12 +101,20 @@ class DomainModel {
     }
   }
 
-  async delete(id: string, user_id: string): Promise<boolean> {
+  async delete(
+    id: string,
+    user_id: string
+  ): Promise<{ success: boolean; message: string }> {
     const query = "DELETE FROM domains WHERE id = $1 AND user_id = $2;";
 
     try {
-      await pool.query(query, [id, user_id]);
-      return true;
+      const result = await pool.query(query, [id, user_id]);
+
+      if (result.rowCount === 0) {
+        throw new Error("Domínio não encontrado ou usuário não autorizado.");
+      }
+
+      return { success: true, message: "Domínio deletado com sucesso." };
     } catch (error) {
       console.error("Erro ao deletar domínio:", error);
       throw new Error("Erro ao deletar domínio");
