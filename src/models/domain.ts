@@ -145,7 +145,12 @@ class DomainModel {
         });
 
         // Se encontrar registros, obtém o valor do CNAME
-        if (records && records.length > 0) {
+        if (
+          records &&
+          records.length > 0 &&
+          records[0].data &&
+          records[0].data.length > 0
+        ) {
           cnameTarget = records[0].data[0];
           break;
         }
@@ -165,7 +170,7 @@ class DomainModel {
           [new Date(), domainId, userId]
         );
 
-        return updatedResult.rowCount > 0; // Retorna true se a atualização foi bem-sucedida
+        return updatedResult.rowCount !== null && updatedResult.rowCount > 0;
       } else {
         throw new Error("CNAME não aponta para o destino esperado.");
       }
