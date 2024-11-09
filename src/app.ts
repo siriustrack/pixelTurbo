@@ -1,9 +1,4 @@
 import express from "express";
 import cors from "cors";
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-export default app;
+import conversionRoutes from "./routes/conversion";
+import domainRoutes from "./routes/d
