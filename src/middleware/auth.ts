@@ -30,19 +30,15 @@ const authMiddleware = (
     return res.status(401).json({ error: "Token mal formatado" });
   }
 
-  jwt.verify(
-    token,
-    process.env.JWT_SECRET || "",
-    (err: any, decoded: TokenPayload) => {
-      if (err) {
-        return res.status(401).json({ error: "Token inválido" });
-      }
-      const payload = decoded as TokenPayload;
-      req.user_id = payload.id;
-
-      return next();
+  jwt.verify(token, process.env.JWT_SECRET || "", (err: any, decoded: any) => {
+    if (err) {
+      return res.status(401).json({ error: "Token inválido" });
     }
-  );
+    const payload = decoded as TokenPayload;
+    req.user_id = payload.id;
+
+    return next();
+  });
 };
 
 export default authMiddleware;
