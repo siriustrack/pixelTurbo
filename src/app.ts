@@ -42,6 +42,21 @@ app.use(
   })
 );
 
+// Add this new route before the existing Swagger UI setup:
+app.get(
+  "/api-docs/swagger.json",
+  (
+    _req: any,
+    res: {
+      setHeader: (arg0: string, arg1: string) => void;
+      send: (arg0: any) => void;
+    }
+  ) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(specs);
+  }
+);
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/conversions", conversionRoutes);
