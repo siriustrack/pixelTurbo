@@ -123,7 +123,7 @@ class DomainModel {
         domainId,
         userId,
       ]);
-      const domain = result.rows[0];
+      const domain = result.rows?.[0];
 
       if (!domain) {
         throw new Error("Domínio não encontrado ou usuário não autorizado.");
@@ -133,18 +133,18 @@ class DomainModel {
       const expectedTarget = process.env.PROXY_SERVER || "";
 
       // Verifique o registro CNAME usando Google Cloud DNS
-      const [zone] = await dnsClient.getZones();
+      const [zones] = await dnsClient.getZones();
       let cnameTarget = "";
 
       // Procure pelo registro CNAME no zone
-      for (const zoneInstance of zone) {
-        const [records] = await zoneInstance.getRecords({
+      for (const zone of zones) {
+        const [records] = await zone.getRecords({
           type: "CNAME",
           name: cnameRecord,
         });
 
         // Se encontrar registros, pegue o valor do CNAME
-        if (records.length > 0) {
+        if (records && records.length > 0) {
           cnameTarget = records[0].data[0];
           break;
         }
@@ -164,7 +164,7 @@ class DomainModel {
           [new Date(), domainId, userId]
         );
 
-        return updatedResult.rowCount > 0; // Retorna true se a atualização foi bem-sucedida
+        return (updatedResult.rowCount ?? 0) > 0; // Retorna true se a atualização foi bem-sucedida
       } else {
         throw new Error("CNAME não aponta para o destino esperado.");
       }
