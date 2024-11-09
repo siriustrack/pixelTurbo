@@ -2,8 +2,10 @@ import { QueryResult } from "pg";
 import { pool } from "../utils/pgdb";
 import { Domain } from "../types";
 import { v4 as uuidv4 } from "uuid";
-import { DNS, Zone, Record } from "@google-cloud/dns";
+import dns from "dns";
+import { promisify } from "util";
 
+const resolveCname = promisify(dns.resolveCname);
 class DomainModel {
   async create(domain: Domain): Promise<Domain> {
     const { user_id, domain_name } = domain;
@@ -131,40 +133,32 @@ class DomainModel {
       const cnameRecord = `pxt.${domain.domain_name}`;
       const expectedTarget = process.env.PROXY_SERVER || "";
 
-      const dnsClient = new DNS();
-      const [zones] = await dnsClient.getZones();
-      let cnameTarget = "";
+      try {
+        const cnameResults = await resolveCname(cnameRecord);
+        const cnameTarget = cnameResults[0]; // Pega o primeiro resultado CNAME
 
-      for (const zone of zones) {
-        const [records] = await zone.getRecords({
-          type: "CNAME",
-          name: cnameRecord,
-        });
+        if (cnameTarget === expectedTarget) {
+          const updateQuery = `
+            UPDATE domains
+            SET is_validated = true, updated_at = $1
+            WHERE id = $2 AND user_id = $3
+            RETURNING *;
+          `;
+          const updatedResult: QueryResult<Domain> = await pool.query(
+            updateQuery,
+            [new Date(), domainId, userId]
+          );
 
-        if (Array.isArray(records) && records.length > 0) {
-          const record = records[0] as Record;
-          if (Array.isArray(record.data) && record.data.length > 0) {
-            cnameTarget = record.data[0];
-            break;
-          }
+          return updatedResult.rowCount !== null && updatedResult.rowCount > 0;
+        } else {
+          throw new Error("CNAME não aponta para o destino esperado.");
         }
-      }
-
-      if (cnameTarget === expectedTarget) {
-        const updateQuery = `
-          UPDATE domains
-          SET is_validated = true, updated_at = $1
-          WHERE id = $2 AND user_id = $3
-          RETURNING *;
-        `;
-        const updatedResult: QueryResult<Domain> = await pool.query(
-          updateQuery,
-          [new Date(), domainId, userId]
-        );
-
-        return updatedResult.rowCount !== null && updatedResult.rowCount > 0;
-      } else {
-        throw new Error("CNAME não aponta para o destino esperado.");
+      } catch (dnsError: any) {
+        if (dnsError.code === "ENODATA") {
+          throw new Error("Registro CNAME não encontrado.");
+        } else {
+          throw new Error(`Erro ao resolver CNAME: ${dnsError.message}`);
+        }
       }
     } catch (error) {
       console.error("Erro ao validar CNAME do domínio:", error);
