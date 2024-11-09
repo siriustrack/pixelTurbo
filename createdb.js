@@ -130,17 +130,4 @@ const createTables = async () => {
             CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads(phone);
             CREATE INDEX IF NOT EXISTS idx_leads_domain_id ON leads(domain_id);
             CREATE INDEX IF NOT EXISTS idx_conversions_domain_id ON conversions(domain_id);
-            CREATE INDEX IF NOT EXISTS idx_events_domain_id ON events(domain_id);
-            CREATE INDEX IF NOT EXISTS idx_events_lead_id ON events(lead_id);
-        `);
-
-    console.log("Estrutura de banco de dados criada com sucesso!");
-  } catch (err) {
-    console.error("Erro ao criar a estrutura do banco de dados:", err);
-  } finally {
-    await client.end();
-    console.log("Conexão encerrada.");
-  }
-};
-
-createTables();
+            CREATE INDEX IF NOT EXISTS idx_events
