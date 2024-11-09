@@ -44,6 +44,7 @@ Thumbs.db
 
 # Arquivos .env (variáveis de ambiente) - DESCOMENTE SE FOR COMMITAR AS VARIAVEIS DE AMBIENTE NO GIT
 .env
+.env.test
 createdb.js
 getschema.js
 # Arquivos de cache do Docker
