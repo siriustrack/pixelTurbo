@@ -103,7 +103,7 @@ class AuthController {
         { expiresIn: "1h" }
       );
 
-      const newRefreshToken = this.generateRefreshToken(user.id!);
+      const newRefreshToken = UserService.generateRefreshToken(user.id!);
       tokenStore.delete(refreshToken); // Invalidate old refresh token
 
       return res.status(200).json({
@@ -222,15 +222,5 @@ class AuthController {
       return res.status(500).json({ error: "Error during logout" });
     }
   }
-
-  private generateRefreshToken(userId: string): string {
-    const refreshToken = uuidv4();
-    tokenStore.set(refreshToken, {
-      userId,
-      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-    return refreshToken;
-  }
-}
 
 export default new AuthController();

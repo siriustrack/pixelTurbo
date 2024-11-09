@@ -72,7 +72,7 @@ class UserService {
     return { token, refreshToken };
   }
 
-  private generateRefreshToken(userId: string | undefined): string {
+  public generateRefreshToken(userId: string | undefined): string {
     if (!userId) {
       throw new Error("ID do usuário não fornecido");
     }
