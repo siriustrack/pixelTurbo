@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { RequestCustom } from "./interfaces/RequestCustom"; // Importe a interface customizada
-import UserService from "./services/user";
-import { User } from "./types"; // Importe a interface User
+import { RequestCustom } from "../interfaces/RequestCustom"; // Importe a interface customizada
+import UserService from "../services/user";
+import { User } from "../types"; // Importe a interface User
 
 class UserController {
   async create(req: Request, res: Response): Promise<Response> {
