@@ -11,7 +11,7 @@ const authMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
-): Response | void => {
+): Response | void | any => {
   const { authorization } = req.headers;
 
   if (!authorization) {
