@@ -7,7 +7,11 @@ interface TokenPayload {
   exp: number;
 }
 
-const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+const authMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Response | void | any => {
   const { authorization } = req.headers;
 
   if (!authorization) {

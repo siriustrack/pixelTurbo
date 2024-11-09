@@ -5,7 +5,7 @@ import swaggerJsdoc from "swagger-jsdoc";
 import { securityHeaders, corsOptions } from "./middleware/security";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { apiLimiter } from "./middleware/rateLimiter";
-import { loggerMiddleware } from "./middleware/requestLogger";
+import { loggerMiddleware } from "./utils/requestLogger";
 import swaggerDefinition from "./docs/swaggerDef";
 import authRoutes from "./routes/auth";
 import conversionRoutes from "./routes/conversion";

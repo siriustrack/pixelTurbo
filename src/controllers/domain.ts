@@ -4,7 +4,7 @@ import DomainService from "../services/domain";
 import { Domain } from "../types"; // Importe a interface Domain
 
 class DomainController {
-  async create(req: Request, res: Response): Promise<Response> {
+  async create(req: Request, res: Response): Promise<Response | any> {
     try {
       const domain = await DomainService.create(req.body as Domain); // Type assertion para Domain
       return res.status(201).json(domain);
@@ -17,7 +17,7 @@ class DomainController {
     }
   }
 
-  async getAll(req: RequestCustom, res: Response): Promise<Response> {
+  async getAll(req: RequestCustom, res: Response): Promise<Response | any> {
     try {
       const domains = await DomainService.getAll();
       return res.status(200).json(domains);
@@ -27,7 +27,7 @@ class DomainController {
     }
   }
 
-  async getById(req: Request, res: Response): Promise<Response> {
+  async getById(req: Request, res: Response): Promise<Response | any> {
     try {
       const id = req.params.id;
       const domain = await DomainService.getById(id);
@@ -43,7 +43,7 @@ class DomainController {
     }
   }
 
-  async update(req: Request, res: Response): Promise<Response> {
+  async update(req: Request, res: Response): Promise<Response | any> {
     const id = req.params.id;
     const updatedDomain = req.body as Domain;
 
@@ -59,7 +59,7 @@ class DomainController {
     }
   }
 
-  async delete(req: Request, res: Response): Promise<Response> {
+  async delete(req: Request, res: Response): Promise<Response | any> {
     try {
       const id = req.params.id;
       const deleted = await DomainService.delete(id);

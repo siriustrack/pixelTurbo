@@ -129,6 +129,18 @@ class EventModel {
     }
   }
 
+  async delete(id: string): Promise<boolean> {
+    const query = "DELETE FROM events WHERE id = $1;";
+
+    try {
+      await pool.query(query, [id]);
+      return true;
+    } catch (error) {
+      console.error("Erro ao deletar event:", error);
+      throw new Error("Erro ao deletar domínio");
+    }
+  }
+
   // Ajuste no método update para aceitar atualizações parciais
   async update(id: string, event: Partial<Event>): Promise<Event | null> {
     const fields = Object.keys(event).filter(
