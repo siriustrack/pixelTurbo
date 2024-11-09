@@ -166,7 +166,9 @@ class AuthController {
         return res.status(404).json({ error: "User not found" });
       }
 
-      await UserService.update(user.id!, { ...user, password });
+      // Hash the new password before updating
+      const hashedPassword = await UserService.hashPassword(password);
+      await UserService.update(user.id!, { ...user, password: hashedPassword });
       await PasswordResetTokenModel.delete(token);
 
       return res.status(200).json({ message: "Password reset successful" });

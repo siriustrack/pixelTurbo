@@ -89,7 +89,7 @@ class UserService {
     return refreshToken;
   }
 
-  private hashPassword(password: string): Promise<string> {
+  public hashPassword(password: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const salt = crypto.randomBytes(16).toString("hex"); // Gera um salt aleatório
       crypto.pbkdf2(
