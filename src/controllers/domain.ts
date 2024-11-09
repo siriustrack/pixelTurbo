@@ -1,28 +1,16 @@
 import { Request, Response } from "express";
 import DomainService from "../services/domain";
-import { Domain } from "../types"; // Importação da interface Domain
+import { Domain } from "../types";
 
 class DomainController {
   async create(req: Request, res: Response): Promise<Response | any> {
     try {
-      const { domain_name } = req.body;
-      const user_id = req.user_id; // Pegue o user_id da requisição
-
-      // Verifique se o user_id está presente
-      if (!user_id) {
-        return res.status(400).json({ error: "User ID não fornecido" });
-      }
-
-      // Passe o user_id explicitamente para o serviço
-      const domain = await DomainService.create({
-        domain_name,
-        user_id,
-      } as Domain);
+      const domain = await DomainService.create(req.body as Domain);
       return res.status(201).json(domain);
     } catch (error: any) {
       console.error("Erro ao criar domínio:", error);
       if (error.message === "Este domínio já está cadastrado.") {
-        return res.status(400).send({ error: error.message }); // Bad Request para domínio duplicado
+        return res.status(400).send({ error: error.message });
       }
       return res.status(500).send("Erro ao criar domínio");
     }
@@ -57,9 +45,20 @@ class DomainController {
   async update(req: Request, res: Response): Promise<Response | any> {
     const id = req.params.id;
     const updatedDomain = req.body as Domain;
+    const user_id = req.user_id; // Obtém o user_id do usuário autenticado
 
     try {
-      const domain = await DomainService.update(id, updatedDomain);
+      // Verifica se o domínio pertence ao usuário autenticado
+      const existingDomain = await DomainService.getById(id);
+      if (!existingDomain || existingDomain.user_id !== user_id) {
+        return res.status(403).send("Acesso negado");
+      }
+
+      // Atualiza o domínio
+      const domain = await DomainService.update(id, {
+        ...updatedDomain,
+        user_id,
+      });
       if (!domain) {
         return res.status(404).send("Domínio não encontrado");
       }
@@ -71,14 +70,22 @@ class DomainController {
   }
 
   async delete(req: Request, res: Response): Promise<Response | any> {
-    try {
-      const id = req.params.id;
-      const deleted = await DomainService.delete(id);
+    const id = req.params.id;
+    const user_id = req.user_id; // Obtém o user_id do usuário autenticado
 
+    try {
+      // Verifica se o domínio pertence ao usuário autenticado
+      const existingDomain = await DomainService.getById(id);
+      if (!existingDomain || existingDomain.user_id !== user_id) {
+        return res.status(403).send("Acesso negado");
+      }
+
+      // Deleta o domínio
+      const deleted = await DomainService.delete(id);
       if (!deleted) {
         return res.status(404).send("Domínio não encontrado");
       }
-      return res.status(204).send(); // No Content
+      return res.status(204).send();
     } catch (error) {
       console.error("Erro ao deletar domínio:", error);
       return res.status(500).send("Erro ao deletar domínio");
