@@ -45,16 +45,15 @@ class DomainModel {
       throw new Error("Erro ao buscar todos os domínios");
     }
   }
-
-  async getById(id: string): Promise<Domain | null> {
-    const query = `SELECT * FROM domains WHERE id = $1`;
+  async getById(id: string, userId: string): Promise<Domain | null> {
+    const query = `SELECT * FROM domains WHERE id = $1 AND user_id = $2`;
 
     try {
-      const result: QueryResult<Domain> = await pool.query(query, [id]);
+      const result: QueryResult<Domain> = await pool.query(query, [id, userId]);
       return result.rows[0] || null;
     } catch (error) {
-      console.error("Erro ao buscar domínio por ID:", error);
-      throw new Error("Erro ao buscar domínio por ID");
+      console.error("Erro ao buscar domínio por ID e user_id:", error);
+      throw new Error("Erro ao buscar domínio por ID e user_id");
     }
   }
 
@@ -88,7 +87,7 @@ class DomainModel {
     const query = `
       UPDATE domains
       SET user_id = $1, domain_name = $2, updated_at = $3
-      WHERE id = $4
+      WHERE id = $4 AND user_id = $1
       RETURNING *;
     `;
     const values = [user_id, domain_name, updated_at, id];
@@ -102,8 +101,8 @@ class DomainModel {
     }
   }
 
-  async delete(id: string): Promise<boolean> {
-    const query = "DELETE FROM domains WHERE id = $1;";
+  async delete(id: string, user_id: string): Promise<boolean> {
+    const query = "DELETE FROM domains WHERE id = $1 AND user_id = $2;";
 
     try {
       await pool.query(query, [id]);

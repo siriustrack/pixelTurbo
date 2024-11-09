@@ -16,8 +16,8 @@ class DomainService {
     return await DomainModel.getAll();
   }
 
-  async getById(id: string): Promise<Domain | null> {
-    const domain = await DomainModel.getById(id);
+  async getById(id: string, user_id: string): Promise<Domain | null> {
+    const domain = await DomainModel.getById(id, user_id);
     if (!domain) {
       throw new Error("Domínio não encontrado");
     }
@@ -32,13 +32,17 @@ class DomainService {
     return await DomainModel.getByDomainName(domainName);
   }
 
-  async update(id: string, domain: Domain): Promise<Domain | null> {
+  async update(
+    id: string,
+    domain: Domain,
+    user_id: string
+  ): Promise<Domain | null> {
     const errors = validationResult(domain);
     if (!errors.isEmpty()) {
       throw new Error(errors.array()[0].msg);
     }
 
-    const existingDomain = await DomainModel.getById(id);
+    const existingDomain = await DomainModel.getById(id, user_id);
     if (!existingDomain) {
       throw new Error("Domínio não encontrado");
     }
@@ -46,13 +50,13 @@ class DomainService {
     return await DomainModel.update(id, domain);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const existingDomain = await DomainModel.getById(id);
+  async delete(id: string, user_id: string): Promise<boolean> {
+    const existingDomain = await DomainModel.getById(id, user_id);
     if (!existingDomain) {
       throw new Error("Domínio não encontrado");
     }
 
-    return await DomainModel.delete(id);
+    return await DomainModel.delete(id, user_id);
   }
 }
 
