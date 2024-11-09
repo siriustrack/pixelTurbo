@@ -108,7 +108,7 @@ class DomainController {
         return res.status(404).send("Domínio não encontrado");
       }
 
-      return res.status(204).send(); // No Content
+      return res.status(204).send("Domínio excluído com sucesso"); // No Content
     } catch (error) {
       console.error("Erro ao deletar domínio:", error);
       return res.status(500).send("Erro ao deletar domínio");
