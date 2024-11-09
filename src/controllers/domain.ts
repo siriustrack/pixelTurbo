@@ -1,12 +1,23 @@
 import { Request, Response } from "express";
-import { RequestCustom } from "../interfaces/RequestCustom"; // Importe a interface customizada
 import DomainService from "../services/domain";
-import { Domain } from "../types"; // Importe a interface Domain
+import { Domain } from "../types"; // Importação da interface Domain
 
 class DomainController {
   async create(req: Request, res: Response): Promise<Response | any> {
     try {
-      const domain = await DomainService.create(req.body as Domain); // Type assertion para Domain
+      const { domain_name } = req.body;
+      const user_id = req.user_id; // Pegue o user_id da requisição
+
+      // Verifique se o user_id está presente
+      if (!user_id) {
+        return res.status(400).json({ error: "User ID não fornecido" });
+      }
+
+      // Passe o user_id explicitamente para o serviço
+      const domain = await DomainService.create({
+        domain_name,
+        user_id,
+      } as Domain);
       return res.status(201).json(domain);
     } catch (error: any) {
       console.error("Erro ao criar domínio:", error);
@@ -17,7 +28,7 @@ class DomainController {
     }
   }
 
-  async getAll(req: RequestCustom, res: Response): Promise<Response | any> {
+  async getAll(req: Request, res: Response): Promise<Response | any> {
     try {
       const domains = await DomainService.getAll();
       return res.status(200).json(domains);

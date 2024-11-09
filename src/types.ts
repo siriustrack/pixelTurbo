@@ -31,7 +31,7 @@ export interface Conversion {
 
 export interface Domain {
   id?: string;
-  user_id?: string | null;
+  user_id: string | null;
   domain_name: string;
   created_at?: Date;
   updated_at?: Date;
