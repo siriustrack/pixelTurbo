@@ -222,5 +222,5 @@ class AuthController {
       return res.status(500).json({ error: "Error during logout" });
     }
   }
-
+}
 export default new AuthController();
