@@ -11,7 +11,7 @@ const authMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
-): Response | void | any => {
+): Response | void => {
   const { authorization } = req.headers;
 
   if (!authorization) {
@@ -30,15 +30,20 @@ const authMiddleware = (
     return res.status(401).json({ error: "Token mal formatado" });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET || "", (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ error: "Token inválido" });
+  jwt.verify(
+    token,
+    process.env.JWT_SECRET || "",
+    (err: any, decoded: TokenPayload) => {
+      if (err) {
+        return res.status(401).json({ error: "Token inválido" });
+      }
+
+      const payload = decoded as TokenPayload;
+      req.user_id = payload.id;
+
+      return next();
     }
-
-    req.user_id = (decoded as TokenPayload).id;
-
-    return next();
-  });
+  );
 };
 
 export default authMiddleware;
