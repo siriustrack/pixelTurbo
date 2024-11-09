@@ -1,6 +1,7 @@
 import { Router } from "express";
 import FacebookPixelController from "../controllers/facebookPixel";
 import { body } from "express-validator";
+import authMiddleware from "../middleware/auth";
 
 const router = Router();
 
@@ -286,6 +287,6 @@ router.put(
  *       404:
  *         description: Facebook Pixel not found
  */
-router.delete("/:id", FacebookPixelController.delete);
+router.delete("/:id", authMiddleware, FacebookPixelController.delete);
 
 export default router;

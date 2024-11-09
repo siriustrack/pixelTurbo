@@ -1,6 +1,7 @@
 import { Router } from "express";
 import ConversionController from "../controllers/conversion";
 import { body } from "express-validator";
+import authMiddleware from "../middleware/auth";
 
 const router = Router();
 
@@ -255,6 +256,6 @@ router.put(
  *       404:
  *         description: Conversion not found
  */
-router.delete("/:id", ConversionController.delete);
+router.delete("/:id", authMiddleware, ConversionController.delete);
 
 export default router;
