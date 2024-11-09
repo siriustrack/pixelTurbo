@@ -15,6 +15,8 @@ import facebookPixelRoutes from "./routes/facebookPixel";
 import leadRoutes from "./routes/lead";
 
 const app = express();
+// Habilite a configuração trust proxy para ambientes com proxy reverso
+app.set("trust proxy", true);
 
 // Security Middleware
 app.use(securityHeaders);
