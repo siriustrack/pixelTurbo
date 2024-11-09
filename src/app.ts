@@ -42,20 +42,12 @@ app.use(
   })
 );
 
-// Add this new route before the existing Swagger UI setup:
-app.get(
-  "/api-docs/swagger.json",
-  (
-    _req: any,
-    res: {
-      setHeader: (arg0: string, arg1: string) => void;
-      send: (arg0: any) => void;
-    }
-  ) => {
-    res.setHeader("Content-Type", "application/json");
-    res.send(specs);
-  }
-);
+// Serve swagger.json with proper caching and content type
+app.get("/api-docs/swagger.json", (_req: any, res: any) => {
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
+  res.status(200).json(specs);
+});
 
 // Routes
 app.use("/api/auth", authRoutes);
