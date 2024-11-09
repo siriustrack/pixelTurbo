@@ -2,9 +2,8 @@ import { QueryResult } from "pg";
 import { pool } from "../utils/pgdb";
 import { Domain } from "../types";
 import { v4 as uuidv4 } from "uuid";
-import { DNS } from "@google-cloud/dns";
+import { DNS, Zone, Record } from "@google-cloud/dns";
 
-const dnsClient = new DNS();
 class DomainModel {
   async create(domain: Domain): Promise<Domain> {
     const { user_id, domain_name } = domain;
@@ -114,17 +113,16 @@ class DomainModel {
       throw new Error("Erro ao deletar domínio");
     }
   }
+
   async validateCname(domainId: string, userId: string): Promise<boolean> {
     const query = `SELECT * FROM domains WHERE id = $1 AND user_id = $2`;
 
     try {
-      // Busca o domínio no banco de dados para verificar sua existência
       const result: QueryResult<Domain> = await pool.query(query, [
         domainId,
         userId,
       ]);
 
-      // Verifica se o domínio foi encontrado
       if (!result.rows || result.rows.length === 0) {
         throw new Error("Domínio não encontrado ou usuário não autorizado.");
       }
@@ -133,32 +131,26 @@ class DomainModel {
       const cnameRecord = `pxt.${domain.domain_name}`;
       const expectedTarget = process.env.PROXY_SERVER || "";
 
-      // Verifica o registro CNAME usando Google Cloud DNS
+      const dnsClient = new DNS();
       const [zones] = await dnsClient.getZones();
       let cnameTarget = "";
 
-      // Procura pelo registro CNAME nos zones
       for (const zone of zones) {
         const [records] = await zone.getRecords({
           type: "CNAME",
           name: cnameRecord,
         });
 
-        // Se encontrar registros, obtém o valor do CNAME
-        if (
-          records &&
-          records.length > 0 &&
-          records[0].data &&
-          records[0].data.length > 0
-        ) {
-          cnameTarget = records[0].data[0];
-          break;
+        if (Array.isArray(records) && records.length > 0) {
+          const record = records[0] as Record;
+          if (Array.isArray(record.data) && record.data.length > 0) {
+            cnameTarget = record.data[0];
+            break;
+          }
         }
       }
 
-      // Verifica se o CNAME está apontando para o valor esperado
       if (cnameTarget === expectedTarget) {
-        // Atualiza o campo is_validated para true se o CNAME estiver correto
         const updateQuery = `
           UPDATE domains
           SET is_validated = true, updated_at = $1
