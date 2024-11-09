@@ -63,7 +63,7 @@ class AuthController {
     }
   }
 
-  async refreshToken(req: Request, res: Response): Promise<Response> {
+  async refreshToken(req: Request, res: Response): Promise<Response | any> {
     try {
       const { refreshToken } = req.body;
       const storedToken = tokenStore.get(refreshToken);
@@ -101,7 +101,7 @@ class AuthController {
     }
   }
 
-  async forgotPassword(req: Request, res: Response): Promise<Response> {
+  async forgotPassword(req: Request, res: Response): Promise<Response | any> {
     try {
       const { email } = req.body;
       const user = await UserService.getByEmail(email);
@@ -131,7 +131,7 @@ class AuthController {
     }
   }
 
-  async resetPassword(req: Request, res: Response): Promise<Response> {
+  async resetPassword(req: Request, res: Response): Promise<Response | any> {
     try {
       const { token, password } = req.body;
       const storedToken = passwordResetTokens.get(token);
@@ -182,7 +182,7 @@ class AuthController {
     }
   }
 
-  async logout(req: Request, res: Response): Promise<Response> {
+  async logout(req: Request, res: Response): Promise<Response | any> {
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader) {
