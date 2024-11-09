@@ -38,6 +38,7 @@ Thumbs.db
 # Arquivos de cache yarn
 .yarn-cache
 .yarn-integrity
+yarn_lock
 
 # Arquivos específicos do TypeScript
 *.tsbuildinfo

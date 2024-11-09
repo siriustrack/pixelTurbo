@@ -278,5 +278,56 @@ router.delete(
   [param("id").notEmpty().withMessage("ID é obrigatório")],
   DomainController.delete
 );
+/**
+ * @swagger
+ * /domains/{domain_id}/validate-cname:
+ *   post:
+ *     summary: Validate CNAME for a domain
+ *     description: Validate if the CNAME record of the specified domain points to the expected target.
+ *     tags: [Domains]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: domain_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Domain UUID
+ *     responses:
+ *       200:
+ *         description: CNAME validated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "CNAME validado com sucesso"
+ *       400:
+ *         description: CNAME does not point to the expected target
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "CNAME não aponta para o destino esperado"
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       404:
+ *         description: Domain not found or user unauthorized
+ *       500:
+ *         description: Error validating CNAME
+ */
+router.post(
+  "/:domain_id/validate-cname",
+  authMiddleware,
+  [param("domain_id").notEmpty().withMessage("Domain ID é obrigatório")],
+  DomainController.validateCname
+);
 
 export default router;

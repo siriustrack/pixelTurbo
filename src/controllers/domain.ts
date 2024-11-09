@@ -114,6 +114,34 @@ class DomainController {
       return res.status(500).send("Erro ao deletar domínio");
     }
   }
+  // Novo método para validar o CNAME
+  async validateCname(req: Request, res: Response): Promise<Response | any> {
+    try {
+      const { domain_id } = req.params;
+      const user_id = req.user_id;
+
+      if (!user_id) {
+        return res.status(400).json({ error: "User ID não fornecido" });
+      }
+
+      // Chama o serviço para validar o CNAME
+      const isValid = await DomainService.validateDomainCname(
+        domain_id,
+        user_id
+      );
+
+      if (isValid) {
+        return res.status(200).json({ message: "CNAME validado com sucesso" });
+      } else {
+        return res
+          .status(400)
+          .json({ error: "CNAME não aponta para o destino esperado" });
+      }
+    } catch (error) {
+      console.error("Erro ao validar CNAME do domínio:", error);
+      return res.status(500).send("Erro ao validar CNAME do domínio");
+    }
+  }
 }
 
 export default new DomainController();

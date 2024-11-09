@@ -35,6 +35,7 @@ export interface Domain {
   domain_name: string;
   created_at?: Date;
   updated_at?: Date;
+  is_validated?: boolean;
 }
 
 export interface Event {

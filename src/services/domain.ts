@@ -58,6 +58,25 @@ class DomainService {
 
     return await DomainModel.delete(id, user_id);
   }
+  // Novo método para validar o CNAME
+  async validateDomainCname(
+    domainId: string,
+    userId: string
+  ): Promise<boolean> {
+    const domain = await DomainModel.getById(domainId, userId);
+    if (!domain) {
+      throw new Error("Domínio não encontrado ou usuário não autorizado");
+    }
+
+    // Chama o método de validação do modelo
+    const isValid = await DomainModel.validateCname(domainId, userId);
+
+    if (!isValid) {
+      throw new Error("CNAME não aponta para o destino esperado.");
+    }
+
+    return isValid;
+  }
 }
 
 export default new DomainService();
