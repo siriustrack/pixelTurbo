@@ -103,6 +103,7 @@ const router = Router();
  */
 router.post(
   "/",
+  authMiddleware,
   [
     body("pixel_id").notEmpty().withMessage("O ID do pixel é obrigatório"),
     body("api_token").notEmpty().withMessage("O token da API é obrigatório"),
@@ -143,7 +144,7 @@ router.post(
  *       401:
  *         description: Unauthorized
  */
-router.get("/", FacebookPixelController.getAll);
+router.get("/", authMiddleware, FacebookPixelController.getAll);
 
 /**
  * @swagger
@@ -174,7 +175,7 @@ router.get("/", FacebookPixelController.getAll);
  *       401:
  *         description: Unauthorized
  */
-router.get("/:id", FacebookPixelController.getById);
+router.get("/:id", authMiddleware, FacebookPixelController.getById);
 
 /**
  * @swagger
@@ -205,7 +206,11 @@ router.get("/:id", FacebookPixelController.getById);
  *       401:
  *         description: Unauthorized
  */
-router.get("/domain/:domainId", FacebookPixelController.getByDomainId);
+router.get(
+  "/domain/:domainId",
+  authMiddleware,
+  FacebookPixelController.getByDomainId
+);
 
 /**
  * @swagger
@@ -255,6 +260,7 @@ router.get("/domain/:domainId", FacebookPixelController.getByDomainId);
  */
 router.put(
   "/:id",
+  authMiddleware,
   [
     body("pixel_id").optional().notEmpty(),
     body("api_token").optional().notEmpty(),

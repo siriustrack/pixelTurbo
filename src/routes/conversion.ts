@@ -92,6 +92,7 @@ const router = Router();
  */
 router.post(
   "/",
+  authMiddleware,
   [
     body("title").notEmpty().withMessage("O título é obrigatório"),
     body("scope")
@@ -135,7 +136,7 @@ router.post(
  *       401:
  *         description: Unauthorized
  */
-router.get("/", ConversionController.getAll);
+router.get("/", authMiddleware, ConversionController.getAll);
 
 /**
  * @swagger
@@ -161,7 +162,7 @@ router.get("/", ConversionController.getAll);
  *       404:
  *         description: Conversion not found
  */
-router.get("/:id", ConversionController.getById);
+router.get("/:id", authMiddleware, ConversionController.getById);
 
 /**
  * @swagger
@@ -187,7 +188,11 @@ router.get("/:id", ConversionController.getById);
  *               items:
  *                 $ref: '#/components/schemas/Conversion'
  */
-router.get("/domain/:domainId", ConversionController.getByDomainId);
+router.get(
+  "/domain/:domainId",
+  authMiddleware,
+  ConversionController.getByDomainId
+);
 
 /**
  * @swagger
@@ -218,6 +223,7 @@ router.get("/domain/:domainId", ConversionController.getByDomainId);
  */
 router.put(
   "/:id",
+  authMiddleware,
   [
     body("title").optional().notEmpty(),
     body("scope").optional().isIn(["website", "specific_page", "regex"]),
