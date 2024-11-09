@@ -15,41 +15,18 @@ import facebookPixelRoutes from "./routes/facebookPixel";
 import leadRoutes from "./routes/lead";
 
 const app = express();
-// Habilite a configuração trust proxy para ambientes com proxy reverso
 app.set("trust proxy", true);
-
-// Security Middleware
 app.use(securityHeaders);
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
-
-// Logging Middleware
 app.use(loggerMiddleware);
-
-// Rate Limiting
 app.use("/api/", apiLimiter);
 
-// Swagger Documentation
 const specs = swaggerJsdoc(swaggerDefinition);
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(specs, {
-    explorer: true,
-    customCss: ".swagger-ui .topbar { display: none }",
-    customSiteTitle: "PixelTurbo API Documentation",
-  })
-);
 
-// Middleware para remover o ETag
-function removeETagHeader(_req: any, res: any, next: any) {
-  res.removeHeader("ETag");
-  next();
-}
-
-// Rota Swagger JSON sem ETag
-app.get("/api-docs/swagger.json", removeETagHeader, (_req: any, res: any) => {
+// Middleware para remover ETag e forçar atualização de cache
+app.get("/api-docs/swagger.json", (_req: any, res: any) => {
   res.setHeader("Content-Type", "application/json");
   res.setHeader(
     "Cache-Control",
@@ -60,7 +37,18 @@ app.get("/api-docs/swagger.json", removeETagHeader, (_req: any, res: any) => {
   res.status(200).json(specs);
 });
 
-// Routes
+// Adicione uma versão na URL do Swagger UI para forçar o refresh
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "PixelTurbo API Documentation",
+  })
+);
+
+// Rotas da API
 app.use("/api/auth", authRoutes);
 app.use("/api/conversions", conversionRoutes);
 app.use("/api/domains", domainRoutes);
@@ -68,7 +56,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/facebook-pixels", facebookPixelRoutes);
 app.use("/api/leads", leadRoutes);
 
-// Error Handling
+// Middleware de tratamento de erros
 app.use(notFoundHandler);
 app.use(errorHandler);
 
