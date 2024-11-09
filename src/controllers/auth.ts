@@ -1,15 +1,26 @@
 import { Request, Response } from "express";
 import UserService from "../services/user";
 import Logger from "../utils/logger";
+import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
+
+// Store for refresh tokens and password reset tokens (in production, use Redis/DB)
+const tokenStore = new Map<string, { userId: string; expiresAt: number }>();
+const passwordResetTokens = new Map<
+  string,
+  { email: string; expiresAt: number }
+>();
 
 class AuthController {
   async register(req: Request, res: Response): Promise<Response | any> {
     try {
       const user = await UserService.create(req.body);
       const token = await UserService.login(req.body.email, req.body.password);
+      const refreshToken = this.generateRefreshToken(user.id!);
 
       return res.status(201).json({
         token,
+        refreshToken,
         user: {
           id: user.id,
           name: user.name,
@@ -35,8 +46,11 @@ class AuthController {
         return res.status(404).json({ error: "Usuário não encontrado" });
       }
 
+      const refreshToken = this.generateRefreshToken(user.id!);
+
       return res.status(200).json({
         token,
+        refreshToken,
         user: {
           id: user.id,
           name: user.name,
@@ -46,6 +60,100 @@ class AuthController {
     } catch (error: any) {
       Logger.error("Login error:", error);
       return res.status(401).json({ error: "Credenciais inválidas" });
+    }
+  }
+
+  async refreshToken(req: Request, res: Response): Promise<Response> {
+    try {
+      const { refreshToken } = req.body;
+      const storedToken = tokenStore.get(refreshToken);
+
+      if (!storedToken) {
+        return res.status(401).json({ error: "Invalid refresh token" });
+      }
+
+      if (Date.now() > storedToken.expiresAt) {
+        tokenStore.delete(refreshToken);
+        return res.status(401).json({ error: "Refresh token expired" });
+      }
+
+      const user = await UserService.getById(storedToken.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const newAccessToken = jwt.sign(
+        { id: user.id },
+        process.env.JWT_SECRET || "",
+        { expiresIn: "1h" }
+      );
+
+      const newRefreshToken = this.generateRefreshToken(user.id!);
+      tokenStore.delete(refreshToken); // Invalidate old refresh token
+
+      return res.status(200).json({
+        token: newAccessToken,
+        refreshToken: newRefreshToken,
+      });
+    } catch (error) {
+      Logger.error("Refresh token error:", error);
+      return res.status(500).json({ error: "Error refreshing token" });
+    }
+  }
+
+  async forgotPassword(req: Request, res: Response): Promise<Response> {
+    try {
+      const { email } = req.body;
+      const user = await UserService.getByEmail(email);
+
+      if (!user) {
+        // Return 200 even if user not found for security
+        return res.status(200).json({
+          message: "If an account exists, a password reset email will be sent",
+        });
+      }
+
+      const resetToken = uuidv4();
+      passwordResetTokens.set(resetToken, {
+        email: user.email,
+        expiresAt: Date.now() + 3600000, // 1 hour expiry
+      });
+
+      // In production, send email with reset link
+      Logger.info(`Password reset token for ${email}: ${resetToken}`);
+
+      return res.status(200).json({
+        message: "If an account exists, a password reset email will be sent",
+      });
+    } catch (error) {
+      Logger.error("Forgot password error:", error);
+      return res.status(500).json({ error: "Error processing request" });
+    }
+  }
+
+  async resetPassword(req: Request, res: Response): Promise<Response> {
+    try {
+      const { token, password } = req.body;
+      const storedToken = passwordResetTokens.get(token);
+
+      if (!storedToken || Date.now() > storedToken.expiresAt) {
+        return res
+          .status(400)
+          .json({ error: "Invalid or expired reset token" });
+      }
+
+      const user = await UserService.getByEmail(storedToken.email);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      await UserService.update(user.id!, { ...user, password });
+      passwordResetTokens.delete(token);
+
+      return res.status(200).json({ message: "Password reset successful" });
+    } catch (error) {
+      Logger.error("Reset password error:", error);
+      return res.status(500).json({ error: "Error resetting password" });
     }
   }
 
@@ -72,6 +180,41 @@ class AuthController {
       Logger.error("Get current user error:", error);
       return res.status(500).json({ error: "Erro ao buscar usuário" });
     }
+  }
+
+  async logout(req: Request, res: Response): Promise<Response> {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).json({ error: "No token provided" });
+      }
+
+      const [, token] = authHeader.split(" ");
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "") as {
+        id: string;
+      };
+
+      // Remove all refresh tokens for this user
+      for (const [key, value] of tokenStore.entries()) {
+        if (value.userId === decoded.id) {
+          tokenStore.delete(key);
+        }
+      }
+
+      return res.status(200).json({ message: "Successfully logged out" });
+    } catch (error) {
+      Logger.error("Logout error:", error);
+      return res.status(500).json({ error: "Error during logout" });
+    }
+  }
+
+  private generateRefreshToken(userId: string): string {
+    const refreshToken = uuidv4();
+    tokenStore.set(refreshToken, {
+      userId,
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    return refreshToken;
   }
 }
 
