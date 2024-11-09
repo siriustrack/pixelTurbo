@@ -4,6 +4,7 @@ import Logger from "../utils/logger";
 import jwt from "jsonwebtoken";
 import RefreshTokenModel from "../models/refreshtoken"; // Importe o modelo de refresh tokens
 import { v4 as uuidv4 } from "uuid";
+import PasswordResetTokenModel from "../models/passwordresettoken";
 
 class AuthController {
   async register(req: Request, res: Response): Promise<Response | any> {
@@ -126,19 +127,17 @@ class AuthController {
       const user = await UserService.getByEmail(email);
 
       if (!user) {
-        // Return 200 even if user not found for security
         return res.status(200).json({
           message: "If an account exists, a password reset email will be sent",
         });
       }
 
       const resetToken = uuidv4();
-      passwordResetTokens.set(resetToken, {
-        email: user.email,
-        expiresAt: Date.now() + 3600000, // 1 hour expiry
-      });
+      const expiresAt = Date.now() + 3600000; // 1 hora de validade
 
-      // In production, send email with reset link
+      // Armazena o token de redefinição de senha no banco de dados
+      await PasswordResetTokenModel.create(resetToken, user.email, expiresAt);
+
       Logger.info(`Password reset token for ${email}: ${resetToken}`);
 
       return res.status(200).json({
@@ -153,7 +152,8 @@ class AuthController {
   async resetPassword(req: Request, res: Response): Promise<Response | any> {
     try {
       const { token, password } = req.body;
-      const storedToken = passwordResetTokens.get(token);
+
+      const storedToken = await PasswordResetTokenModel.getByToken(token);
 
       if (!storedToken || Date.now() > storedToken.expiresAt) {
         return res
@@ -167,7 +167,7 @@ class AuthController {
       }
 
       await UserService.update(user.id!, { ...user, password });
-      passwordResetTokens.delete(token);
+      await PasswordResetTokenModel.delete(token);
 
       return res.status(200).json({ message: "Password reset successful" });
     } catch (error) {
