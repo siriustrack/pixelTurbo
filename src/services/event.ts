@@ -1,40 +1,8 @@
 import { Event } from "../types";
 import EventModel from "../models/event";
-import axios from "axios";
 
 class EventService {
   async create(event: Event): Promise<Event> {
-    // Enviar para a Facebook Conversion API
-    try {
-      const facebookResponse = await axios.post(
-        "https://graph.facebook.com/v12.0/<PIXEL_ID>/events",
-        {
-          data: {
-            event_name: event.event_name,
-            event_time: Math.floor(event.event_time.getTime() / 1000),
-            event_source_url: event.event_source_url,
-            user_data: {
-              client_ip_address: event.facebook_request?.client_ip_address,
-              client_user_agent: event.facebook_request?.client_user_agent,
-            },
-            custom_data: {
-              currency: event.currency,
-              value: event.value,
-            },
-          },
-          access_token: "<ACCESS_TOKEN>",
-        }
-      );
-
-      event.facebook_response = facebookResponse.data;
-    } catch (error) {
-      console.error(
-        "Erro ao enviar evento para Facebook Conversion API:",
-        error
-      );
-      throw new Error("Erro ao enviar evento para Facebook Conversion API.");
-    }
-
     return await EventModel.create(event);
   }
 
@@ -50,7 +18,19 @@ class EventService {
     return event;
   }
 
-  async update(id: string, event: Event): Promise<Event | null> {
+  async getByDomainId(domainId: string): Promise<Event[]> {
+    return await EventModel.getByDomainId(domainId);
+  }
+
+  async getByLeadId(leadId: string): Promise<Event[]> {
+    return await EventModel.getByLeadId(leadId);
+  }
+
+  async getByConversionId(conversionId: string): Promise<Event[]> {
+    return await EventModel.getByConversionId(conversionId);
+  }
+
+  async update(id: string, event: Partial<Event>): Promise<Event | null> {
     const existingEvent = await EventModel.getById(id);
     if (!existingEvent) {
       throw new Error("Evento não encontrado");
@@ -66,6 +46,10 @@ class EventService {
     }
 
     return await EventModel.delete(id);
+  }
+
+  async deleteByDomainId(domainId: string): Promise<boolean> {
+    return await EventModel.deleteByDomainId(domainId);
   }
 }
 

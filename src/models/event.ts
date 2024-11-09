@@ -79,59 +79,80 @@ class EventModel {
     }
   }
 
-  async update(id: string, event: Event): Promise<Event | null> {
-    const {
-      lead_id,
-      conversion_id,
-      domain_id,
-      event_name,
-      event_time,
-      event_source_url,
-      content_ids,
-      currency,
-      value,
-      facebook_request,
-      facebook_response,
-    } = event;
-    const query = `
-      UPDATE events
-      SET lead_id = $1, conversion_id = $2, domain_id = $3, event_name = $4, event_time = $5, event_source_url = $6, content_ids = $7, currency = $8, value = $9, facebook_request = $10, facebook_response = $11
-      WHERE id = $12
-      RETURNING *;
-    `;
-    const values = [
-      lead_id,
-      conversion_id,
-      domain_id,
-      event_name,
-      event_time,
-      event_source_url,
-      content_ids,
-      currency,
-      value,
-      facebook_request,
-      facebook_response,
-      id,
-    ];
+  async getByDomainId(domainId: string): Promise<Event[]> {
+    const query = `SELECT * FROM events WHERE domain_id = $1`;
 
     try {
-      const result: QueryResult<Event> = await pool.query(query, values);
+      const result: QueryResult<Event> = await pool.query(query, [domainId]);
+      return result.rows;
+    } catch (error) {
+      console.error("Erro ao buscar eventos por domain_id:", error);
+      throw new Error("Erro ao buscar eventos por domain_id");
+    }
+  }
+
+  async getByLeadId(leadId: string): Promise<Event[]> {
+    const query = `SELECT * FROM events WHERE lead_id = $1`;
+
+    try {
+      const result: QueryResult<Event> = await pool.query(query, [leadId]);
+      return result.rows;
+    } catch (error) {
+      console.error("Erro ao buscar eventos por lead_id:", error);
+      throw new Error("Erro ao buscar eventos por lead_id");
+    }
+  }
+
+  async getByConversionId(conversionId: string): Promise<Event[]> {
+    const query = `SELECT * FROM events WHERE conversion_id = $1`;
+
+    try {
+      const result: QueryResult<Event> = await pool.query(query, [
+        conversionId,
+      ]);
+      return result.rows;
+    } catch (error) {
+      console.error("Erro ao buscar eventos por conversion_id:", error);
+      throw new Error("Erro ao buscar eventos por conversion_id");
+    }
+  }
+
+  async deleteByDomainId(domainId: string): Promise<boolean> {
+    const query = "DELETE FROM events WHERE domain_id = $1;";
+
+    try {
+      await pool.query(query, [domainId]);
+      return true;
+    } catch (error) {
+      console.error("Erro ao deletar eventos por domain_id:", error);
+      throw new Error("Erro ao deletar eventos por domain_id");
+    }
+  }
+
+  // Ajuste no método update para aceitar atualizações parciais
+  async update(id: string, event: Partial<Event>): Promise<Event | null> {
+    const fields = Object.keys(event).filter((key) => event[key] !== undefined);
+    const values = fields.map((field) => event[field]);
+
+    const setClause = fields
+      .map((field, index) => `${field} = $${index + 1}`)
+      .join(", ");
+    const query = `
+      UPDATE events
+      SET ${setClause}
+      WHERE id = $${fields.length + 1}
+      RETURNING *;
+    `;
+
+    try {
+      const result: QueryResult<Event> = await pool.query(query, [
+        ...values,
+        id,
+      ]);
       return result.rows[0] || null;
     } catch (error) {
       console.error("Erro ao atualizar evento:", error);
       throw new Error("Erro ao atualizar evento");
-    }
-  }
-
-  async delete(id: string): Promise<boolean> {
-    const query = "DELETE FROM events WHERE id = $1;";
-
-    try {
-      await pool.query(query, [id]);
-      return true;
-    } catch (error) {
-      console.error("Erro ao deletar evento:", error);
-      throw new Error("Erro ao deletar evento");
     }
   }
 }
