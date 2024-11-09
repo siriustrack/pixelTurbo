@@ -37,7 +37,6 @@ const authMiddleware = (
       if (err) {
         return res.status(401).json({ error: "Token inválido" });
       }
-
       const payload = decoded as TokenPayload;
       req.user_id = payload.id;
 
