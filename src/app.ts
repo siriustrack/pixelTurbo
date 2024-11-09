@@ -45,7 +45,7 @@ app.use(
 // Serve swagger.json with proper caching and content type
 app.get("/api-docs/swagger.json", (_req: any, res: any) => {
   res.setHeader("Content-Type", "application/json");
-  res.setHeader("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
+  res.setHeader("Cache-Control", "no-cache");
   res.status(200).json(specs);
 });
 

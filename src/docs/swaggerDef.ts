@@ -19,6 +19,10 @@ const swaggerDefinition: Options = {
     },
     servers: [
       {
+        url: process.env.API_PROD_URL || "http://localhost:3000/api",
+        description: "Production server",
+      },
+      {
         url: "http://localhost:3000/api",
         description: "Development server",
       },
