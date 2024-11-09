@@ -1,10 +1,23 @@
 import app from "./app";
 import * as dotenv from "dotenv";
+import Logger from "./utils/logger";
+import { monitorSystem, monitorDatabase } from "./utils/monitoring";
+import { Pool } from "pg";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
+// Initialize database pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+// Start monitoring
+monitorSystem();
+monitorDatabase(pool);
+
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  Logger.info(`Server is running on port ${PORT}`);
 });
