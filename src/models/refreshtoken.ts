@@ -46,6 +46,16 @@ class RefreshTokenModel {
       throw new Error("Erro ao deletar refresh token");
     }
   }
+  async deleteByUserId(userId: string): Promise<void> {
+    const query = `DELETE FROM refresh_tokens WHERE user_id = $1`;
+
+    try {
+      await pool.query(query, [userId]);
+    } catch (error) {
+      console.error("Erro ao deletar tokens de refresh do usuário:", error);
+      throw new Error("Erro ao deletar tokens de refresh do usuário");
+    }
+  }
 }
 
 export default new RefreshTokenModel();
