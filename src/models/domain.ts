@@ -105,7 +105,7 @@ class DomainModel {
     const query = "DELETE FROM domains WHERE id = $1 AND user_id = $2;";
 
     try {
-      await pool.query(query, [id]);
+      await pool.query(query, [id, user_id]);
       return true;
     } catch (error) {
       console.error("Erro ao deletar domínio:", error);
