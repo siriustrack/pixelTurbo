@@ -118,41 +118,42 @@ class DomainModel {
     const query = `SELECT * FROM domains WHERE id = $1 AND user_id = $2`;
 
     try {
-      // Busque o domínio no banco de dados para verificar sua existência
+      // Busca o domínio no banco de dados para verificar sua existência
       const result: QueryResult<Domain> = await pool.query(query, [
         domainId,
         userId,
       ]);
-      const domain = result.rows?.[0];
 
-      if (!domain) {
+      // Verifica se o domínio foi encontrado
+      if (!result.rows || result.rows.length === 0) {
         throw new Error("Domínio não encontrado ou usuário não autorizado.");
       }
 
+      const domain = result.rows[0];
       const cnameRecord = `pxt.${domain.domain_name}`;
       const expectedTarget = process.env.PROXY_SERVER || "";
 
-      // Verifique o registro CNAME usando Google Cloud DNS
+      // Verifica o registro CNAME usando Google Cloud DNS
       const [zones] = await dnsClient.getZones();
       let cnameTarget = "";
 
-      // Procure pelo registro CNAME no zone
+      // Procura pelo registro CNAME nos zones
       for (const zone of zones) {
         const [records] = await zone.getRecords({
           type: "CNAME",
           name: cnameRecord,
         });
 
-        // Se encontrar registros, pegue o valor do CNAME
+        // Se encontrar registros, obtém o valor do CNAME
         if (records && records.length > 0) {
           cnameTarget = records[0].data[0];
           break;
         }
       }
 
-      // Verifique se o CNAME está apontando para o valor esperado
+      // Verifica se o CNAME está apontando para o valor esperado
       if (cnameTarget === expectedTarget) {
-        // Atualize o campo is_validated para true se o CNAME estiver correto
+        // Atualiza o campo is_validated para true se o CNAME estiver correto
         const updateQuery = `
           UPDATE domains
           SET is_validated = true, updated_at = $1
@@ -164,7 +165,7 @@ class DomainModel {
           [new Date(), domainId, userId]
         );
 
-        return (updatedResult.rowCount ?? 0) > 0; // Retorna true se a atualização foi bem-sucedida
+        return updatedResult.rowCount > 0; // Retorna true se a atualização foi bem-sucedida
       } else {
         throw new Error("CNAME não aponta para o destino esperado.");
       }
