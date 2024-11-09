@@ -1,5 +1,4 @@
 import { Request } from "express";
-import * as jwt from "jsonwebtoken";
 
 interface TokenPayload {
   id: string;
@@ -8,5 +7,5 @@ interface TokenPayload {
 }
 
 export interface RequestCustom extends Request {
-  user_id: string | jwt.JwtPayload | string[] | undefined;
+  user_id?: string;
 }

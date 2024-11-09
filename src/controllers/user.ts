@@ -4,7 +4,7 @@ import UserService from "../services/user";
 import { User } from "../types"; // Importe a interface User
 
 class UserController {
-  async create(req: Request, res: Response): Promise<Response> {
+  async create(req: RequestCustom, res: Response): Promise<Response | void> {
     try {
       const user = await UserService.create(req.body as User); // Type assertion para User
       res.status(201).json(user);
@@ -18,12 +18,11 @@ class UserController {
     }
   }
 
-  async getAll(req: RequestCustom, res: Response): Promise<Response> {
+  async getAll(req: RequestCustom, res: Response): Promise<Response | void> {
     try {
       const users = await UserService.getAll();
-      res.status(200).json(users);
+      return res.status(200).json(users);
     } catch (error) {
-      // Lidar com erros e retornar status 500
       console.error(error);
       return res.status(500).send("Erro ao buscar usuários");
     }
@@ -38,7 +37,7 @@ class UserController {
         return res.status(404).send("Usuário não encontrado");
       }
 
-      res.json(user);
+      return res.status(200).json(user);
     } catch (error) {
       console.error("Erro ao buscar usuário por ID:", error);
       return res.status(500).send("Erro ao buscar usuário");
