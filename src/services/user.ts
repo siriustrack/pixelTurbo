@@ -1,21 +1,27 @@
 import { User } from "../types";
 import UserModel from "../models/user";
-import * as bcrypt from "bcryptjs"; // Para hash de senhas
 import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
+import crypto from "crypto";
+
+const tokenStore = new Map<string, { userId: string; expiresAt: number }>();
 
 class UserService {
+  private readonly saltRounds = 10000; // Número de iterações de hash para aumentar a segurança
+  private readonly keyLength = 64; // Comprimento do hash resultante
+
   async create(user: User): Promise<User> {
     const errors = validationResult(user);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg); // Lança o primeiro erro de validação
+      throw new Error(errors.array()[0].msg);
     }
 
-    const hashedPassword = await bcrypt.hash(user.password, 10); // Hash da senha
+    const hashedPassword = await this.hashPassword(user.password);
 
     const newUser: User = {
       ...user,
-      password: hashedPassword, // Salva o hash da senha, não a senha em texto plano
+      password: hashedPassword,
     };
 
     return await UserModel.create(newUser);
@@ -34,7 +40,6 @@ class UserService {
   }
 
   async update(id: string, user: User): Promise<User | null> {
-    // Aqui você pode adicionar lógica adicional, como verificar se o email já existe para outro usuário
     return await UserModel.update(id, user);
   }
 
@@ -42,24 +47,78 @@ class UserService {
     return await UserModel.delete(id);
   }
 
-  async login(email: string, password: string): Promise<string | null> {
+  async login(
+    email: string,
+    password: string
+  ): Promise<{ token: string; refreshToken: string } | null> {
     const user = await this.getByEmail(email);
 
     if (!user) {
       throw new Error("Usuário não encontrado");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await this.verifyPassword(password, user.password);
 
     if (!isPasswordValid) {
       throw new Error("Senha incorreta.");
     }
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "", {
-      expiresIn: "7d", // Tempo de expiração (7 dias) - configure conforme necessário
+      expiresIn: "7d",
     });
 
-    return token;
+    const refreshToken = this.generateRefreshToken(user.id);
+
+    return { token, refreshToken };
+  }
+
+  private generateRefreshToken(userId: string | undefined): string {
+    if (!userId) {
+      throw new Error("ID do usuário não fornecido");
+    }
+    const refreshToken = uuidv4();
+    tokenStore.set(refreshToken, {
+      userId,
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    });
+    return refreshToken;
+  }
+
+  private hashPassword(password: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const salt = crypto.randomBytes(16).toString("hex"); // Gera um salt aleatório
+      crypto.pbkdf2(
+        password,
+        salt,
+        this.saltRounds,
+        this.keyLength,
+        "sha512",
+        (err, derivedKey) => {
+          if (err) reject(err);
+          else resolve(`${salt}:${derivedKey.toString("hex")}`); // Concatena salt e hash para armazenar
+        }
+      );
+    });
+  }
+
+  private verifyPassword(
+    password: string,
+    storedHash: string
+  ): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const [salt, key] = storedHash.split(":");
+      crypto.pbkdf2(
+        password,
+        salt,
+        this.saltRounds,
+        this.keyLength,
+        "sha512",
+        (err, derivedKey) => {
+          if (err) reject(err);
+          else resolve(key === derivedKey.toString("hex")); // Compara o hash gerado com o hash armazenado
+        }
+      );
+    });
   }
 }
 

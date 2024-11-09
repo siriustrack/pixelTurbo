@@ -15,8 +15,19 @@ class AuthController {
   async register(req: Request, res: Response): Promise<Response | any> {
     try {
       const user = await UserService.create(req.body);
-      const token = await UserService.login(req.body.email, req.body.password);
-      const refreshToken = this.generateRefreshToken(user.id!);
+
+      const loginResult = await UserService.login(
+        req.body.email,
+        req.body.password
+      );
+
+      if (!loginResult) {
+        return res
+          .status(401)
+          .json({ error: "Erro ao gerar token de autenticação" });
+      }
+
+      const { token, refreshToken } = loginResult;
 
       return res.status(201).json({
         token,
@@ -39,14 +50,18 @@ class AuthController {
   async login(req: Request, res: Response): Promise<Response | any> {
     try {
       const { email, password } = req.body;
-      const token = await UserService.login(email, password);
+      const loginResult = await UserService.login(email, password);
+
+      if (!loginResult) {
+        return res.status(401).json({ error: "Credenciais inválidas" });
+      }
+
+      const { token, refreshToken } = loginResult;
       const user = await UserService.getByEmail(email);
 
       if (!user) {
         return res.status(404).json({ error: "Usuário não encontrado" });
       }
-
-      const refreshToken = this.generateRefreshToken(user.id!);
 
       return res.status(200).json({
         token,
