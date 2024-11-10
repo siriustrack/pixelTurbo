@@ -1,40 +1,41 @@
-import { QueryResult } from "pg";
-import { pool } from "../utils/pgdb";
+import { clickhouseClient } from "../chdb";
 import { Event } from "../types";
 import { v4 as uuidv4 } from "uuid";
 
 class EventModel {
+  // Método para inserir um novo evento no banco de dados
   async create(event: Event): Promise<Event> {
     const {
       lead_id,
-      conversion_id,
       domain_id,
       event_name,
       event_time,
-      event_source_url,
+      event_url,
       content_ids,
       currency,
       value,
       facebook_request,
       facebook_response,
     } = event;
+
+    // Gera um novo UUID para o evento
     const id = uuidv4();
     const created_at = new Date();
 
+    // Query SQL para inserção
     const query = `
-      INSERT INTO events (id, lead_id, conversion_id, domain_id, event_name, event_time, event_source_url, content_ids, currency, value, facebook_request, facebook_response, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      RETURNING *
+      INSERT INTO events (id, lead_id, domain_id, event_name, event_time, event_url, content_ids, currency, value, facebook_request, facebook_response, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
+    // Valores a serem inseridos
     const values = [
       id,
       lead_id,
-      conversion_id,
       domain_id,
       event_name,
       event_time,
-      event_source_url,
+      event_url,
       content_ids,
       currency,
       value,
@@ -44,127 +45,28 @@ class EventModel {
     ];
 
     try {
-      const result: QueryResult<Event> = await pool.query(query, values);
-      return result.rows[0];
+      // Executa a inserção no ClickHouse
+      await clickhouseClient.insert(query, values).toPromise();
+      // Retorna o objeto do evento inserido
+      return { id, ...event, created_at };
     } catch (error: any) {
       console.error("Erro ao criar evento:", error);
       throw new Error("Erro ao criar evento.");
     }
   }
 
-  async getAll(): Promise<Event[]> {
-    const query = "SELECT * FROM events;";
-
-    try {
-      const result: QueryResult<Event> = await pool.query(query);
-      return result.rows;
-    } catch (error) {
-      console.error("Erro ao buscar todos os eventos:", error);
-      throw new Error("Erro ao buscar todos os eventos");
-    }
-  }
-
+  // Método para buscar um evento por ID
   async getById(id: string): Promise<Event | null> {
-    const query = `SELECT * FROM events WHERE id = $1`;
+    const query = `SELECT * FROM events WHERE id = ?`;
 
     try {
-      const result: QueryResult<Event> = await pool.query(query, [id]);
-      return result.rows[0] || null;
+      // Executa a busca no ClickHouse
+      const result = await clickhouseClient.query(query, [id]).toPromise();
+      // Retorna o primeiro resultado ou null se não existir
+      return result.data[0] || null;
     } catch (error) {
       console.error("Erro ao buscar evento por ID:", error);
       throw new Error("Erro ao buscar evento por ID");
-    }
-  }
-
-  async getByDomainId(domainId: string): Promise<Event[]> {
-    const query = `SELECT * FROM events WHERE domain_id = $1`;
-
-    try {
-      const result: QueryResult<Event> = await pool.query(query, [domainId]);
-      return result.rows;
-    } catch (error) {
-      console.error("Erro ao buscar eventos por domain_id:", error);
-      throw new Error("Erro ao buscar eventos por domain_id");
-    }
-  }
-
-  async getByLeadId(leadId: string): Promise<Event[]> {
-    const query = `SELECT * FROM events WHERE lead_id = $1`;
-
-    try {
-      const result: QueryResult<Event> = await pool.query(query, [leadId]);
-      return result.rows;
-    } catch (error) {
-      console.error("Erro ao buscar eventos por lead_id:", error);
-      throw new Error("Erro ao buscar eventos por lead_id");
-    }
-  }
-
-  async getByConversionId(conversionId: string): Promise<Event[]> {
-    const query = `SELECT * FROM events WHERE conversion_id = $1`;
-
-    try {
-      const result: QueryResult<Event> = await pool.query(query, [
-        conversionId,
-      ]);
-      return result.rows;
-    } catch (error) {
-      console.error("Erro ao buscar eventos por conversion_id:", error);
-      throw new Error("Erro ao buscar eventos por conversion_id");
-    }
-  }
-
-  async deleteByDomainId(domainId: string): Promise<boolean> {
-    const query = "DELETE FROM events WHERE domain_id = $1;";
-
-    try {
-      await pool.query(query, [domainId]);
-      return true;
-    } catch (error) {
-      console.error("Erro ao deletar eventos por domain_id:", error);
-      throw new Error("Erro ao deletar eventos por domain_id");
-    }
-  }
-
-  async delete(id: string): Promise<boolean> {
-    const query = "DELETE FROM events WHERE id = $1;";
-
-    try {
-      await pool.query(query, [id]);
-      return true;
-    } catch (error) {
-      console.error("Erro ao deletar event:", error);
-      throw new Error("Erro ao deletar domínio");
-    }
-  }
-
-  // Ajuste no método update para aceitar atualizações parciais
-  async update(id: string, event: Partial<Event>): Promise<Event | null> {
-    const fields = Object.keys(event).filter(
-      (key): key is keyof Event =>
-        key in event && event[key as keyof Event] !== undefined
-    );
-    const values = fields.map((field) => event[field as keyof Event]);
-
-    const setClause = fields
-      .map((field, index) => `${field} = $${index + 1}`)
-      .join(", ");
-    const query = `
-      UPDATE events
-      SET ${setClause}
-      WHERE id = $${fields.length + 1}
-      RETURNING *;
-    `;
-
-    try {
-      const result: QueryResult<Event> = await pool.query(query, [
-        ...values,
-        id,
-      ]);
-      return result.rows[0] || null;
-    } catch (error) {
-      console.error("Erro ao atualizar evento:", error);
-      throw new Error("Erro ao atualizar evento");
     }
   }
 }

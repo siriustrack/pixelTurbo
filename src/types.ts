@@ -58,80 +58,84 @@ export interface User {
   updated_at?: Date;
 }
 
-export interface Event {
-  id?: string; // Corresponde a id na tabela SQL
-  event_id: string; // Corresponde a event_id na tabela SQL
-  lead_id?: string | null; // Corresponde a lead_id na tabela SQL
-  event_name: string; // Corresponde a event_name na tabela SQL
-  event_time: Date; // Corresponde a event_time na tabela SQL
-  event_url?: string | null; // Corresponde a event_url na tabela SQL
-  page_id?: string | null; // Corresponde a page_id na tabela SQL
-  page_title?: string | null; // Corresponde a page_title na tabela SQL
-  product_id?: string | null; // Corresponde a product_id na tabela SQL
-  product_name?: string | null; // Corresponde a product_name na tabela SQL
-  product_value?: number | null; // Corresponde a product_value na tabela SQL
-  predicted_ltv?: number | null; // Corresponde a predicted_ltv na tabela SQL
-  offer_ids?: string | null; // Corresponde a offer_ids na tabela SQL
-  content_name?: string | null; // Corresponde a content_name na tabela SQL
-  traffic_source?: string | null; // Corresponde a traffic_source na tabela SQL
-  utm_source?: string | null; // Corresponde a utm_source na tabela SQL
-  utm_medium?: string | null; // Corresponde a utm_medium na tabela SQL
-  utm_campaign?: string | null; // Corresponde a utm_campaign na tabela SQL
-  utm_id?: string | null; // Corresponde a utm_id na tabela SQL
-  utm_term?: string | null; // Corresponde a utm_term na tabela SQL
-  utm_content?: string | null; // Corresponde a utm_content na tabela SQL
-  src?: string | null; // Corresponde a src na tabela SQL
-  sck?: string | null; // Corresponde a sck na tabela SQL
-  geo_ip?: string | null; // Corresponde a geo_ip na tabela SQL
-  geo_device?: string | null; // Corresponde a geo_device na tabela SQL
-  geo_country?: string | null; // Corresponde a geo_country na tabela SQL
-  geo_state?: string | null; // Corresponde a geo_state na tabela SQL
-  geo_city?: string | null; // Corresponde a geo_city na tabela SQL
-  geo_zipcode?: string | null; // Corresponde a geo_zipcode na tabela SQL
-  geo_currency?: string | null; // Corresponde a geo_currency na tabela SQL
-  fbc?: string | null; // Corresponde a fbc na tabela SQL
-  fbp?: string | null; // Corresponde a fbp na tabela SQL
-  domain_id?: string | null; // Campo adicional, já presente no seu objeto
-  content_ids?: string | null; // Campo adicional, já presente no seu objeto
-  currency?: string | null; // Corresponde a geo_currency na tabela SQL, mas pode ser mantido separado se necessário
-  value?: number | null; // Pode ser mapeado para product_value ou usado separadamente
-  facebook_request?: object | null; // Campo adicional, já presente no seu objeto
-  facebook_response?: object | null; // Campo adicional, já presente no seu objeto
-  created_at?: Date; // Campo adicional, já presente no seu objeto
-}
+type Nullable<T> = T | null;
 
-export interface Lead {
-  id?: string;
-  domain_id?: string;
-  name: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  email: string | null;
-  phone?: string | null;
-  ip?: string | null; // usar como client_ip_address na chave da api do meta
-  user_agent?: string | null; // usar como client_user_agent na chave da api do meta
-  city?: string | null;
-  state?: string | null;
-  zipcode?: string | null;
-  country_name?: string | null;
-  country_code?: string | null;
-  fbc?: string | null;
-  fbp?: string | null;
-  utm_source?: string | null;
-  utm_medium?: string | null;
-  utm_campaign?: string | null;
-  utm_id?: string | null;
-  utm_term?: string | null;
-  utm_content?: string | null;
-  first_utm_source?: string | null;
-  first_utm_medium?: string | null;
-  first_utm_campaign?: string | null;
-  first_utm_id?: string | null;
-  first_utm_term?: string | null;
-  first_utm_content?: string | null;
-  gender?: string | null; // Adicionado para corresponder ao gênero
-  dob?: string | null; // Adicionado para a data de nascimento no formato YYYYMMDD
-  external_id?: string | null; // Adicionado para um ID único de usuário
-  created_at?: Date;
-  updated_at?: Date;
-}
+export type Lead = {
+  id: string; // UUID
+  domain_id: Nullable<string>;
+  name: Nullable<string>;
+  first_name: Nullable<string>;
+  last_name: Nullable<string>;
+  email: Nullable<string>;
+  phone: Nullable<string>;
+  ip: Nullable<string>;
+  user_agent: Nullable<string>;
+  city: Nullable<string>;
+  state: Nullable<string>;
+  zipcode: Nullable<string>;
+  country_name: Nullable<string>;
+  country_code: Nullable<string>;
+  first_fbc: Nullable<string>;
+  fbc: Nullable<string>;
+  fbp: Nullable<string>;
+  utm_source: Nullable<string>;
+  utm_medium: Nullable<string>;
+  utm_campaign: Nullable<string>;
+  utm_id: Nullable<string>;
+  utm_term: Nullable<string>;
+  utm_content: Nullable<string>;
+  first_utm_source: Nullable<string>;
+  first_utm_medium: Nullable<string>;
+  first_utm_campaign: Nullable<string>;
+  first_utm_id: Nullable<string>;
+  first_utm_term: Nullable<string>;
+  first_utm_content: Nullable<string>;
+  gender: Nullable<string>;
+  dob: Nullable<string>; // Assuming dob is a string representation of date
+  external_id: Nullable<string>;
+  created_at: Date; // DateTime
+  updated_at: Date; // DateTime
+};
+
+export type Event = {
+  id: string; // UUID
+  event_id: string;
+  lead_id: Nullable<string>;
+  event_name: string;
+  event_time: Date; // DateTime
+  event_url: Nullable<string>;
+  page_id: Nullable<string>;
+  page_title: Nullable<string>;
+  product_id: Nullable<string>;
+  product_name: Nullable<string>;
+  product_value: Nullable<number>;
+  predicted_ltv: Nullable<number>;
+  offer_ids: Nullable<string>;
+  content_name: Nullable<string>;
+  traffic_source: Nullable<string>;
+  utm_source: Nullable<string>;
+  utm_medium: Nullable<string>;
+  utm_campaign: Nullable<string>;
+  utm_id: Nullable<string>;
+  utm_term: Nullable<string>;
+  utm_content: Nullable<string>;
+  src: Nullable<string>;
+  sck: Nullable<string>;
+  geo_ip: Nullable<string>;
+  geo_device: Nullable<string>;
+  geo_country: Nullable<string>;
+  geo_state: Nullable<string>;
+  geo_city: Nullable<string>;
+  geo_zipcode: Nullable<string>;
+  geo_currency: Nullable<string>;
+  first_fbc: Nullable<string>;
+  fbc: Nullable<string>;
+  fbp: Nullable<string>;
+  domain_id: Nullable<string>;
+  content_ids: Nullable<string>;
+  currency: Nullable<string>;
+  value: Nullable<number>;
+  facebook_request: Nullable<string>;
+  facebook_response: Nullable<string>;
+  created_at: Date; // DateTime
+};
