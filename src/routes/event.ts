@@ -27,8 +27,14 @@ const router = Router();
  *             required:
  *               - event_name
  *               - event_time
- *               - event_source_url
+ *               - event_url
  *             properties:
+ *               event_id:
+ *                 type: string
+ *                 format: uuid
+ *               lead_id:
+ *                 type: string
+ *                 format: uuid
  *               event_name:
  *                 type: string
  *                 example: "purchase"
@@ -36,25 +42,81 @@ const router = Router();
  *                 type: string
  *                 format: date-time
  *                 example: "2024-01-01T12:00:00Z"
- *               event_source_url:
+ *               event_url:
  *                 type: string
  *                 format: uri
  *                 example: "https://example.com/checkout"
- *               lead_id:
+ *               page_id:
  *                 type: string
  *                 format: uuid
+ *               page_title:
+ *                 type: string
+ *               product_id:
+ *                 type: string
+ *                 format: uuid
+ *               product_name:
+ *                 type: string
+ *               product_value:
+ *                 type: number
+ *               predicted_ltv:
+ *                 type: number
+ *               offer_ids:
+ *                 type: string
+ *               content_name:
+ *                 type: string
+ *               traffic_source:
+ *                 type: string
+ *               utm_source:
+ *                 type: string
+ *               utm_medium:
+ *                 type: string
+ *               utm_campaign:
+ *                 type: string
+ *               utm_id:
+ *                 type: string
+ *               utm_term:
+ *                 type: string
+ *               utm_content:
+ *                 type: string
+ *               src:
+ *                 type: string
+ *               sck:
+ *                 type: string
+ *               geo_ip:
+ *                 type: string
+ *               geo_device:
+ *                 type: string
+ *               geo_country:
+ *                 type: string
+ *               geo_state:
+ *                 type: string
+ *               geo_city:
+ *                 type: string
+ *               geo_zipcode:
+ *                 type: string
+ *               geo_currency:
+ *                 type: string
+ *               first_fbc:
+ *                 type: string
+ *               fbc:
+ *                 type: string
+ *               fbp:
+ *                 type: string
  *               domain_id:
  *                 type: string
  *                 format: uuid
  *               content_ids:
  *                 type: string
- *                 example: "prod123,prod456"
  *               currency:
  *                 type: string
  *                 example: "USD"
  *               value:
  *                 type: number
  *                 example: 99.99
+ *               facebook_request:
+ *                 type: string
+ *               facebook_response:
+ *                 type: string
  *     responses:
  *       201:
  *         description: Event created successfully
@@ -75,7 +137,7 @@ router.post(
       .isISO8601()
       .toDate()
       .withMessage("Tempo do evento é obrigatório e deve ser uma data válida"),
-    body("event_source_url")
+    body("event_url")
       .isURL()
       .withMessage(
         "URL de origem do evento é obrigatória e deve ser uma URL válida"
@@ -107,10 +169,39 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
-               $ref: '#/components/schemas/Event'
+ *               $ref: '#/components/schemas/Event'
  *       404:
  *         description: Event not found
  */
 router.get("/:id", EventController.getById);
+
+/**
+ * @swagger
+ * /events/domain/{domain_id}:
+ *   get:
+ *     summary: Get events by Domain ID
+ *     description: Retrieve all events associated with a specific domain_id
+ *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: domain_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Domain UUID
+ *     responses:
+ *       200:
+ *         description: List of events for the given domain_id
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Event'
+ *       404:
+ *         description: Events not found for the given domain_id
+ */
+router.get("/domain/:domain_id", EventController.getByDomainId);
 
 export default router;

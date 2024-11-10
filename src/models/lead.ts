@@ -151,7 +151,7 @@ class LeadModel {
     ];
 
     try {
-      await clickhouseClient.query(query, values).toPromise();
+      await clickhouseClient.query(query, values);
       return await this.getById(id); // Retorna o lead completo após a operação
     } catch (error: any) {
       console.error("Erro ao criar ou atualizar lead:", error);
@@ -164,8 +164,10 @@ class LeadModel {
     const query = `SELECT * FROM leads WHERE id = ?`;
 
     try {
-      const result = await clickhouseClient.query(query, [id]).toPromise();
-      return result.data[0] || null;
+      const result = await clickhouseClient.query(query, [id]);
+      return result && result.data && result.data.length > 0
+        ? (result.data[0] as Lead)
+        : null;
     } catch (error) {
       console.error("Erro ao buscar lead por ID:", error);
       throw new Error("Erro ao buscar lead por ID");
@@ -177,10 +179,8 @@ class LeadModel {
     const query = `SELECT * FROM leads WHERE domain_id = ?`;
 
     try {
-      const result = await clickhouseClient
-        .query(query, [domainId])
-        .toPromise();
-      return result.data as Lead[];
+      const result = await clickhouseClient.query(query, [domainId]);
+      return result && result.data ? (result.data as Lead[]) : [];
     } catch (error) {
       console.error("Erro ao buscar leads por domain_id:", error);
       throw new Error("Erro ao buscar leads por domain_id");

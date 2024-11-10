@@ -15,6 +15,11 @@ class EventService {
     }
     return event;
   }
+
+  // Método para buscar todos os eventos por domain_id chamando o modelo
+  async getByDomainId(domain_id: string): Promise<Event[]> {
+    return await EventModel.getByDomainId(domain_id);
+  }
 }
 
 export default new EventService();

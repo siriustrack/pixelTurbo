@@ -22,6 +22,17 @@ class EventController {
       res.status(404).json({ error: error.message });
     }
   }
+
+  // Método para buscar todos os eventos por domain_id
+  async getByDomainId(req: Request, res: Response): Promise<void> {
+    try {
+      const { domain_id } = req.params;
+      const events = await EventService.getByDomainId(domain_id);
+      res.status(200).json(events);
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
+    }
+  }
 }
 
 export default new EventController();
