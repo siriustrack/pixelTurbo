@@ -49,6 +49,7 @@ yarn_lock
 
 createdb.js
 getschema.js
+create-dbclick.js
 
 # Arquivos de cache do Docker
 **/.cache

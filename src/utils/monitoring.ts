@@ -1,5 +1,6 @@
 import os from "os";
 import Logger from "./logger";
+import clickhouseClient from "./chdb";
 
 export const monitorSystem = () => {
   setInterval(() => {
@@ -37,6 +38,36 @@ export const monitorDatabase = (pool: any) => {
       client.release();
     } catch (error) {
       Logger.error("Database Health Check Failed", { error });
+    }
+  }, 60000); // Check every minute
+};
+
+export const monitorClickhouseDatabase = () => {
+  setInterval(async () => {
+    try {
+      const startTime = Date.now();
+
+      // Perform a basic health check query on ClickHouse
+      const response = await clickhouseClient.query({
+        query: "SELECT 1",
+        format: "JSON",
+      });
+
+      const result = await response.json();
+      const duration = Date.now() - startTime;
+
+      if (result) {
+        Logger.info("ClickHouse Health Check", {
+          status: "healthy",
+          responseTime: duration,
+        });
+      } else {
+        Logger.warn("ClickHouse Health Check", {
+          status: "unresponsive",
+        });
+      }
+    } catch (error) {
+      Logger.error("ClickHouse Health Check Failed", { error });
     }
   }, 60000); // Check every minute
 };

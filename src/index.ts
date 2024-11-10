@@ -1,7 +1,11 @@
 import app from "./app";
 import * as dotenv from "dotenv";
 import Logger from "./utils/logger";
-import { monitorSystem, monitorDatabase } from "./utils/monitoring";
+import {
+  monitorSystem,
+  monitorDatabase,
+  monitorClickhouseDatabase,
+} from "./utils/monitoring";
 import { Pool } from "pg";
 
 dotenv.config();
@@ -16,6 +20,7 @@ const pool = new Pool({
 // Start monitoring
 monitorSystem();
 monitorDatabase(pool);
+monitorClickhouseDatabase();
 
 // Start server
 app.listen(PORT, () => {
