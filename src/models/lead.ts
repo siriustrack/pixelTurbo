@@ -1,4 +1,4 @@
-import { clickhouseClient } from "../chdb";
+import clickhouseClient from "../utils/chdb";
 import { Lead } from "../types";
 import { v4 as uuidv4 } from "uuid";
 
