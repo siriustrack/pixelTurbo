@@ -54,7 +54,7 @@ app.use("/api/conversions", conversionRoutes);
 app.use("/api/domains", domainRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/facebook-pixels", facebookPixelRoutes);
-app.use("/api/leads", leadRoutes);
+app.use("/api/lead", leadRoutes);
 
 // Middleware de tratamento de erros
 app.use(notFoundHandler);
