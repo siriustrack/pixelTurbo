@@ -123,6 +123,21 @@ class LeadModel {
       throw new Error("Erro ao buscar lead por ID");
     }
   }
+
+  // Método para buscar leads por domain_id
+  async getByDomainId(domainId: string): Promise<Lead[]> {
+    const query = `SELECT * FROM leads WHERE domain_id = '${domainId}'`;
+
+    try {
+      const result: any = await clickhouseClient
+        .query({ query })
+        .then((res: { json: () => any }) => res.json());
+      return result as Lead[];
+    } catch (error) {
+      console.error("Erro ao buscar leads por domain_id:", error);
+      throw new Error("Erro ao buscar leads por domain_id");
+    }
+  }
 }
 
 export default new LeadModel();
