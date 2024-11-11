@@ -53,7 +53,7 @@ class EventModel {
     // Query SQL para inserção e valores a serem inseridos
     const queryConfig: any = {
       query: `
-        INSERT INTO events (id, event_id, lead_id, event_name, event_time, event_url, page_id, page_title, product_id, product_name, product_value, predicted_ltv, offer_ids, content_name, traffic_source, utm_source, utm_medium, utm_campaign, utm_id, utm_term, utm_content, src, sck, geo_ip, geo_device, geo_country, geo_state, geo_city, geo_zipcode, geo_currency, first_fbc, fbc, fbp, domain_id, content_ids, currency, value, facebook_request, facebook_response, created_at)
+        INSERT INTO Event (id, event_id, lead_id, event_name, event_time, event_url, page_id, page_title, product_id, product_name, product_value, predicted_ltv, offer_ids, content_name, traffic_source, utm_source, utm_medium, utm_campaign, utm_id, utm_term, utm_content, src, sck, geo_ip, geo_device, geo_country, geo_state, geo_city, geo_zipcode, geo_currency, first_fbc, fbc, fbp, domain_id, content_ids, currency, value, facebook_request, facebook_response, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       values: [
@@ -115,7 +115,7 @@ class EventModel {
   // Método para buscar um evento por ID
   async getById(id: string): Promise<Event | null> {
     const queryConfig = {
-      query: `SELECT * FROM events WHERE id = ?`,
+      query: `SELECT * FROM Event WHERE id = ?`,
       values: [id],
     };
 
@@ -136,7 +136,7 @@ class EventModel {
   // Método para buscar todos os eventos por domain_id
   async getByDomainId(domain_id: string): Promise<Event[]> {
     const queryConfig = {
-      query: `SELECT * FROM events WHERE domain_id = ?`,
+      query: `SELECT * FROM Event WHERE domain_id = ?`,
       values: [domain_id],
     };
 

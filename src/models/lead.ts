@@ -43,7 +43,7 @@ class LeadModel {
     } = lead;
 
     const query = `
-      INSERT INTO leads (id, domain_id, name, first_name, last_name, email, phone, ip, user_agent, city, state, zipcode, country_name, country_code, first_fbc, fbc, fbp, utm_source, utm_medium, utm_campaign, utm_id, utm_term, utm_content, first_utm_source, first_utm_medium, first_utm_campaign, first_utm_id, first_utm_term, first_utm_content, gender, dob, external_id, created_at, updated_at)
+      INSERT INTO Lead (id, domain_id, name, first_name, last_name, email, phone, ip, user_agent, city, state, zipcode, country_name, country_code, first_fbc, fbc, fbp, utm_source, utm_medium, utm_campaign, utm_id, utm_term, utm_content, first_utm_source, first_utm_medium, first_utm_campaign, first_utm_id, first_utm_term, first_utm_content, gender, dob, external_id, created_at, updated_at)
       VALUES ('${id}', '${domain_id}', '${name}', '${first_name}', '${last_name}', '${email}', '${phone}', '${ip}', '${user_agent}', '${city}', '${state}', '${zipcode}', '${country_name}', '${country_code}', '${first_fbc}', '${fbc}', '${fbp}', '${utm_source}', '${utm_medium}', '${utm_campaign}', '${utm_id}', '${utm_term}', '${utm_content}', '${first_utm_source}', '${first_utm_medium}', '${first_utm_campaign}', '${first_utm_id}', '${first_utm_term}', '${first_utm_content}', '${gender}', '${dob}', '${external_id}', '${now}', '${now}')
       ON DUPLICATE KEY UPDATE
         domain_id = COALESCE('${domain_id}', domain_id),
@@ -95,7 +95,7 @@ class LeadModel {
 
   // Método para buscar lead por ID
   async getById(id: string): Promise<Lead | null> {
-    const query = `SELECT * FROM leads WHERE id = '${id}'`;
+    const query = `SELECT * FROM Lead WHERE id = '${id}'`;
 
     try {
       const result: any = await clickhouseClient
@@ -110,7 +110,7 @@ class LeadModel {
 
   // Método para buscar leads por domain_id
   async getByDomainId(domainId: string): Promise<Lead[]> {
-    const query = `SELECT * FROM leads WHERE domain_id = '${domainId}'`;
+    const query = `SELECT * FROM Lead WHERE domain_id = '${domainId}'`;
 
     try {
       const result: any = await clickhouseClient
