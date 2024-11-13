@@ -1,6 +1,8 @@
 import clickhouseClient from "../utils/chdb";
+import { InsertParams } from "@clickhouse/client";
 import { Event } from "../types";
 import { v4 as uuidv4 } from "uuid";
+import { Readable } from "node:stream";
 
 class EventModel {
   // Método para inserir um novo evento no banco de dados
@@ -182,21 +184,8 @@ class EventModel {
       };
 
       // Prepare values for insertion
-      const insertQuery = {
-        query: `
-          INSERT INTO Event (
-            id, event_id, lead_id, event_name, event_time, event_url, 
-            page_id, page_title, product_id, product_name, product_value, 
-            predicted_ltv, offer_ids, content_name, traffic_source, 
-            utm_source, utm_medium, utm_campaign, utm_id, utm_term, 
-            utm_content, src, sck, geo_ip, geo_device, geo_country, 
-            geo_state, geo_city, geo_zipcode, geo_currency, first_fbc, 
-            fbc, fbp, domain_id, content_ids, currency, value, 
-            facebook_request, facebook_response, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-            ?, ?, ?, ?, ?)
-        `,
+      const insertQuery: InsertParams<Readable, unknown> = {
+        table: "Event",
         values: [
           updatedEvent.id,
           updatedEvent.event_id,
@@ -240,6 +229,7 @@ class EventModel {
           updatedEvent.created_at,
           updatedEvent.updated_at,
         ],
+        format: "JSONEachRow",
       };
 
       await clickhouseClient.insert(insertQuery);

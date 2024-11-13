@@ -3,7 +3,7 @@ import FacebookApiRequestService from "../services/facebookApiRequest";
 import { Event } from "../types";
 
 class FacebookApiRequestController {
-  async sendEvent(req: Request, res: Response) {
+  async sendEvent(req: Request, res: Response): Promise<void> {
     try {
       const event: Event = req.body.event;
       const pixelId: string = req.body.pixel_id;

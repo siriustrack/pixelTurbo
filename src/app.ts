@@ -13,6 +13,7 @@ import domainRoutes from "./routes/domain";
 import eventRoutes from "./routes/event";
 import facebookPixelRoutes from "./routes/facebookPixel";
 import leadRoutes from "./routes/lead";
+import facebookConversionApiRoutes from "./routes/facebookApiRequest";
 
 const app = express();
 app.set("trust proxy", true);
@@ -55,6 +56,7 @@ app.use("/api/domains", domainRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/facebook-pixels", facebookPixelRoutes);
 app.use("/api/lead", leadRoutes);
+app.use("/api/facebook-conversion-api", facebookConversionApiRoutes);
 
 // Middleware de tratamento de erros
 app.use(notFoundHandler);
