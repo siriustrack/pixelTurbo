@@ -3,113 +3,113 @@ import { Lead } from "../types";
 import { v4 as uuidv4 } from "uuid";
 
 class LeadModel {
-  // Método de upsert: cria ou atualiza um lead com base no ID
   async create(lead: Lead): Promise<Lead> {
-    const id = lead.id || uuidv4();
-    const now = new Date().toISOString();
-
-    const {
-      domain_id,
-      name,
-      first_name,
-      last_name,
-      email,
-      phone,
-      ip,
-      user_agent,
-      city,
-      state,
-      zipcode,
-      country_name,
-      country_code,
-      first_fbc,
-      fbc,
-      fbp,
-      utm_source,
-      utm_medium,
-      utm_campaign,
-      utm_id,
-      utm_term,
-      utm_content,
-      first_utm_source,
-      first_utm_medium,
-      first_utm_campaign,
-      first_utm_id,
-      first_utm_term,
-      first_utm_content,
-      gender,
-      dob,
-      external_id,
-    } = lead;
-
-    // Primeira etapa: Verificar se o lead já existe
-    const existingLead = await this.getById(id);
-
-    // Query de inserção
-    const insertQuery = `
-      INSERT INTO Lead (id, domain_id, name, first_name, last_name, email, phone, ip, user_agent, city, state, zipcode, country_name, country_code, first_fbc, fbc, fbp, utm_source, utm_medium, utm_campaign, utm_id, utm_term, utm_content, first_utm_source, first_utm_medium, first_utm_campaign, first_utm_id, first_utm_term, first_utm_content, gender, dob, external_id, created_at, updated_at)
-      VALUES ('${id}', '${domain_id}', '${name}', '${first_name}', '${last_name}', '${email}', '${phone}', '${ip}', '${user_agent}', '${city}', '${state}', '${zipcode}', '${country_name}', '${country_code}', '${first_fbc}', '${fbc}', '${fbp}', '${utm_source}', '${utm_medium}', '${utm_campaign}', '${utm_id}', '${utm_term}', '${utm_content}', '${first_utm_source}', '${first_utm_medium}', '${first_utm_campaign}', '${first_utm_id}', '${first_utm_term}', '${first_utm_content}', '${gender}', '${dob}', '${external_id}', '${now}', '${now}')
-    `;
-
-    // Query de atualização
-    const updateQuery = `
-      ALTER TABLE Lead UPDATE
-        domain_id = '${domain_id}',
-        name = '${name}',
-        first_name = '${first_name}',
-        last_name = '${last_name}',
-        email = '${email}',
-        phone = '${phone}',
-        ip = '${ip}',
-        user_agent = '${user_agent}',
-        city = '${city}',
-        state = '${state}',
-        zipcode = '${zipcode}',
-        country_name = '${country_name}',
-        country_code = '${country_code}',
-        first_fbc = '${first_fbc}',
-        fbc = '${fbc}',
-        fbp = '${fbp}',
-        utm_source = '${utm_source}',
-        utm_medium = '${utm_medium}',
-        utm_campaign = '${utm_campaign}',
-        utm_id = '${utm_id}',
-        utm_term = '${utm_term}',
-        utm_content = '${utm_content}',
-        first_utm_source = '${first_utm_source}',
-        first_utm_medium = '${first_utm_medium}',
-        first_utm_campaign = '${first_utm_campaign}',
-        first_utm_id = '${first_utm_id}',
-        first_utm_term = '${first_utm_term}',
-        first_utm_content = '${first_utm_content}',
-        gender = '${gender}',
-        dob = '${dob}',
-        external_id = '${external_id}',
-        updated_at = '${now}'
-      WHERE id = '${id}'
-    `;
-
     try {
+      // Generate ID if not provided
+      const id = lead.id || uuidv4();
+      const now = new Date();
+
+      // Try to get existing lead
+      const existingLead = await this.getById(id);
+
+      // Prepare the final lead data
+      let finalLead: Lead = {
+        ...lead,
+        id,
+        created_at: now,
+        updated_at: now,
+      };
+
       if (existingLead) {
-        // Se o lead já existe, execute a query de atualização
-        await clickhouseClient.query({ query: updateQuery });
-      } else {
-        // Caso contrário, insira o novo lead
-        await clickhouseClient.query({ query: insertQuery });
+        // Merge existing and new data, keeping non-null values from the new lead
+        finalLead = {
+          ...existingLead,
+          ...Object.fromEntries(
+            Object.entries(lead).filter(([_, value]) => value != null)
+          ),
+          id,
+          created_at: existingLead.created_at,
+          updated_at: now,
+        };
+
+        // Delete existing lead
+        const deleteQuery = `
+          ALTER TABLE Lead 
+          DELETE WHERE id = '${id}'
+        `;
+        await clickhouseClient.query({ query: deleteQuery });
       }
-      // Verifique se o lead foi criado ou atualizado
-      const lead = await this.getById(id);
-      if (!lead) {
-        throw new Error("Lead não encontrado após criação/atualização.");
+
+      // Insert the final lead data
+      const insertQuery = `
+        INSERT INTO Lead (
+          id, domain_id, name, first_name, last_name, email, phone,
+          ip, user_agent, city, state, zipcode, country_name, country_code,
+          first_fbc, fbc, fbp, utm_source, utm_medium, utm_campaign,
+          utm_id, utm_term, utm_content, first_utm_source, first_utm_medium,
+          first_utm_campaign, first_utm_id, first_utm_term, first_utm_content,
+          gender, dob, external_id, created_at, updated_at
+        ) VALUES (
+          '${finalLead.id}',
+          ${this.formatValue(finalLead.domain_id)},
+          ${this.formatValue(finalLead.name)},
+          ${this.formatValue(finalLead.first_name)},
+          ${this.formatValue(finalLead.last_name)},
+          ${this.formatValue(finalLead.email)},
+          ${this.formatValue(finalLead.phone)},
+          ${this.formatValue(finalLead.ip)},
+          ${this.formatValue(finalLead.user_agent)},
+          ${this.formatValue(finalLead.city)},
+          ${this.formatValue(finalLead.state)},
+          ${this.formatValue(finalLead.zipcode)},
+          ${this.formatValue(finalLead.country_name)},
+          ${this.formatValue(finalLead.country_code)},
+          ${this.formatValue(finalLead.first_fbc)},
+          ${this.formatValue(finalLead.fbc)},
+          ${this.formatValue(finalLead.fbp)},
+          ${this.formatValue(finalLead.utm_source)},
+          ${this.formatValue(finalLead.utm_medium)},
+          ${this.formatValue(finalLead.utm_campaign)},
+          ${this.formatValue(finalLead.utm_id)},
+          ${this.formatValue(finalLead.utm_term)},
+          ${this.formatValue(finalLead.utm_content)},
+          ${this.formatValue(finalLead.first_utm_source)},
+          ${this.formatValue(finalLead.first_utm_medium)},
+          ${this.formatValue(finalLead.first_utm_campaign)},
+          ${this.formatValue(finalLead.first_utm_id)},
+          ${this.formatValue(finalLead.first_utm_term)},
+          ${this.formatValue(finalLead.first_utm_content)},
+          ${this.formatValue(finalLead.gender)},
+          ${this.formatValue(finalLead.dob)},
+          ${this.formatValue(finalLead.external_id)},
+          '${finalLead.created_at}',
+          '${finalLead.updated_at}'
+        )
+      `;
+
+      await clickhouseClient.query({ query: insertQuery });
+
+      // Verify and return the created/updated lead
+      const createdLead = await this.getById(id);
+      if (!createdLead) {
+        throw new Error("Lead not found after creation/update");
       }
-      return lead;
-    } catch (error: any) {
-      console.error("Erro ao criar ou atualizar lead:", error);
-      throw new Error("Erro ao criar ou atualizar lead.");
+
+      return createdLead;
+    } catch (error) {
+      console.error("Error creating or updating lead:", error);
+      throw new Error("Failed to create or update lead");
     }
   }
 
-  // Método para buscar lead por ID
+  // Helper method to format values for SQL query
+  private formatValue(value: any): string {
+    if (value === null || value === undefined) {
+      return "NULL";
+    }
+    return `'${String(value).replace(/'/g, "''")}'`;
+  }
+
   async getById(id: string): Promise<Lead | null> {
     const query = `SELECT * FROM Lead WHERE id = '${id}'`;
 
@@ -119,14 +119,13 @@ class LeadModel {
         .then((res: { json: () => any }) => res.json());
       return result.length > 0 ? (result[0] as Lead) : null;
     } catch (error) {
-      console.error("Erro ao buscar lead por ID:", error);
-      throw new Error("Erro ao buscar lead por ID");
+      console.error("Error fetching lead by ID:", error);
+      throw new Error("Failed to fetch lead by ID");
     }
   }
 
-  // Método para buscar leads por domain_id
   async getByDomainId(domainId: string): Promise<Lead[]> {
-    const query = `SELECT * FROM leads WHERE domain_id = '${domainId}'`;
+    const query = `SELECT * FROM Lead WHERE domain_id = '${domainId}'`;
 
     try {
       const result: any = await clickhouseClient
@@ -134,8 +133,8 @@ class LeadModel {
         .then((res: { json: () => any }) => res.json());
       return result as Lead[];
     } catch (error) {
-      console.error("Erro ao buscar leads por domain_id:", error);
-      throw new Error("Erro ao buscar leads por domain_id");
+      console.error("Error fetching leads by domain_id:", error);
+      throw new Error("Failed to fetch leads by domain_id");
     }
   }
 }
